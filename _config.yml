@@ -1,0 +1,22 @@
+title: AI Quran & Sholat Assistant
+description: Islamic AI Assistant for Quran and Prayer guidance.
+baseurl: ""
+url: ""
+
+# Build settings
+markdown: kramdown
+
+plugins:
+  - jekyll-feed
+
+# Exclude from processing.
+exclude:
+  - .sass-cache/
+  - .jekyll-cache/
+  - gemfiles/
+  - Gemfile.lock
+  - node_modules/
+  - vendor/bundle/
+  - vendor/cache/
+  - vendor/gems/
+  - vendor/ruby/

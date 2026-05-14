@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="{{ page.lang | default: site.lang | default: 'id' }}">
+<head>
+  {% include head.html %}
+</head>
+<body>
+  <ion-app>
+    <ion-split-pane content-id="main-content" when="md">
+      {% include sidebar.html %}
+
+      <!-- CONTENT UTAMA CHAT -->
+      <div class="ion-page" id="main-content">
+        {{ content }}
+      </div>
+    </ion-split-pane>
+  </ion-app>
+
+  {% include scripts.html %}
+</body>
+</html>

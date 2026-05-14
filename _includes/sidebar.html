@@ -1,0 +1,21 @@
+<!-- SIDEBAR: Riwayat Chat -->
+<ion-menu side="start" menu-id="chatHistoryMenu" content-id="main-content" swipeGesture="true">
+  <ion-header>
+    <ion-toolbar>
+      <ion-title>Riwayat Chat</ion-title>
+      <ion-buttons slot="end">
+        <ion-button id="new-chat-btn">
+          <ion-icon slot="icon-only" name="add-outline"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+    </ion-toolbar>
+  </ion-header>
+  <ion-content>
+    <ion-list id="conversation-list" lines="full">
+      <!-- daftar percakapan akan diisi oleh js -->
+      <ion-item lines="none" class="ion-text-center" style="--min-height: 80px;">
+        <ion-label class="ion-text-center" color="medium">Memuat riwayat...</ion-label>
+      </ion-item>
+    </ion-list>
+  </ion-content>
+</ion-menu>
