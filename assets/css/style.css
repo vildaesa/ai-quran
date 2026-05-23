@@ -165,8 +165,6 @@ ion-input {
 .send-btn {
   margin: 0;
   --border-radius: 40px;
-  height: 44px;
-  width: 44px;
 }
 /* ion-split-pane side menu width */
 ion-split-pane {
