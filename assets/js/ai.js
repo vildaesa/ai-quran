@@ -585,7 +585,7 @@
 
 // Pembatasan Sederhana Lisensi
 document.addEventListener('DOMContentLoaded', function () {
-    const dev = 'aHR0cHM6Ly92aWxkYWVzYS5naXRodWIuaW8';
+    const dev = 'aHR0cHM6Ly92aWxkYWVzYS5naXRodWIuaW8=';
     const myLicense = atob(dev);
     const metaLicenseEl = document.querySelector('meta[name="license"]');
     const metaLicense = metaLicenseEl ? metaLicenseEl.getAttribute('content') : null;
