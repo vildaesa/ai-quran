@@ -3,36 +3,12 @@ layout: default
 title: AI Chat - Islamic Chat
 ---
 
-<ion-header>
-  <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-menu-button menu="chatHistoryMenu"></ion-menu-button>
-    </ion-buttons>
-    <ion-title id="chat-title">{{ page.title }}</ion-title>
-    <ion-buttons slot="end">
-      <ion-button id="clear-current-chat-btn" fill="clear">
-        <ion-icon slot="icon-only" name="trash-outline" color="danger"></ion-icon>
-      </ion-button>
-    </ion-buttons>
-  </ion-toolbar>
-</ion-header>
+{% include header.html %}
 
-<ion-content id="chat-content" scroll-events="true">
-  <div class="chat-container" id="messages-container">
-    <!-- Pesan akan dirender disini -->
-    <div class="empty-chat" style="display: none;" id="empty-chat-placeholder">
-      <ion-icon name="chatbubbles-outline" style="font-size: 48px; color: #ccc;"></ion-icon>
-      <p>Mulai percakapan baru<br>Kirim pesan ke AI!</p>
-    </div>
-  </div>
-  <!-- typing indicator akan muncul di sini secara dinamis -->
-</ion-content>
+{% include ion-content.html %}
 
 {% include footer.html %}
 
 <!-- Scroll to top FAB -->
-<ion-fab id="scroll-top-fab" class="scroll-top-fab" vertical="bottom" horizontal="end" slot="fixed" style="display: none;">
-  <ion-fab-button size="small" color="light" id="scroll-top-btn">
-    <ion-icon name="arrow-up-outline"></ion-icon>
-  </ion-fab-button>
-</ion-fab>
+
+{% include fab.html %}
