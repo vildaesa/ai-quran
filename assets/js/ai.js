@@ -821,7 +821,7 @@
     playAllIcon.name = 'play-outline';
     playAllIcon.setAttribute('name', 'play-outline');
 
-    playerCurrentAyahText.innerText = 'Ketuk tombol putar untuk mendengarkan surah secara kontinu';
+    playerCurrentAyahText.innerText = 'Ketuk tombol play untuk mendengarkan semua surah';
   }
 
   function resetContinuousPlayerState() {
@@ -954,15 +954,15 @@
 
   function playNextAyah() {
     if (!currentSurahVerses.length) return;
-  
+
     let nextIndex;
-  
+
     if (currentPlayingIndex < 0) {
       nextIndex = 0;
     } else {
       nextIndex = currentPlayingIndex + 1;
     }
-  
+
     if (nextIndex >= currentSurahVerses.length) {
       showAlert(
         "Ujung Surah",
@@ -970,29 +970,29 @@
       );
       return;
     }
-  
+
     isContinuousPlaying = true;
-  
+
     quranStopBtn.style.display = 'block';
-  
+
     playContinuousAyatByIndex(nextIndex);
   }
-  
+
   function playPrevAyah() {
     if (!currentSurahVerses.length) return;
-  
+
     let prevIndex;
-  
+
     if (currentPlayingIndex <= 0) {
       prevIndex = 0;
     } else {
       prevIndex = currentPlayingIndex - 1;
     }
-  
+
     isContinuousPlaying = true;
-  
+
     quranStopBtn.style.display = 'block';
-  
+
     playContinuousAyatByIndex(prevIndex);
   }
 
