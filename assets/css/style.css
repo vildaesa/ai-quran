@@ -180,7 +180,7 @@ body, ion-app, ion-item, ion-label, ion-title, ion-button, ion-input, ion-textar
 }
 
 .surah-arabic-name {
-  font-family: 'Amiri', 'Noto Naskh Arabic', serif;
+  font-family: 'Amiri', 'Scheherazade New', 'Traditional Arabic', serif;
   font-size: 1.25rem;
   color: #2b6cb0;
   font-weight: 500;
