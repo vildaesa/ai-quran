@@ -1,13 +1,77 @@
-<ion-header>
-  <ion-toolbar>
+<ion-header class="ion-no-border minimalist-header">
+  <ion-toolbar class="minimalist-toolbar">
     <ion-buttons slot="start">
-      <ion-menu-button menu="chatHistoryMenu"></ion-menu-button>
+      <ion-menu-button menu="chatHistoryMenu" class="minimalist-btn"></ion-menu-button>
     </ion-buttons>
-    <ion-title id="chat-title">{{ page.title }}</ion-title>
+    
+    <ion-title id="chat-title" class="minimalist-title">{{ page.title }}</ion-title>
+    
     <ion-buttons slot="end">
-      <ion-button id="clear-current-chat-btn" fill="clear">
-        <ion-icon slot="icon-only" name="trash-outline" color="danger"></ion-icon>
+      <ion-button id="clear-current-chat-btn" fill="clear" class="minimalist-btn-danger">
+        <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
+
+<style>
+  .minimalist-header {
+    --background: #ffffff;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06); 
+  }
+
+  .minimalist-toolbar {
+    --background: transparent;
+    --border-style: none;
+    --padding-start: 12px;
+    --padding-end: 12px;
+    --min-height: 56px;
+  }
+
+  .minimalist-title {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    color: #1a202c;
+    text-align: center;
+  }
+
+  /* Tombol Menu */
+  .minimalist-btn {
+    --color: #4a5568;
+    --background-hover: rgba(0, 0, 0, 0.04);
+    --border-radius: 8px;
+    margin: 4px;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .minimalist-btn-danger {
+    --color: #e53e3e;
+    --background-hover: rgba(229, 62, 62, 0.06);
+    --border-radius: 8px;
+    margin: 4px;
+    transition: all 0.2s ease-in-out;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .minimalist-header {
+      --background: #121212;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    
+    .minimalist-title {
+      color: #f7fafc;
+    }
+    
+    .minimalist-btn {
+      --color: #a0aec0;
+      --background-hover: rgba(255, 255, 255, 0.05);
+    }
+    
+    .minimalist-btn-danger {
+      --color: #feb2b2;
+      --background-hover: rgba(254, 178, 178, 0.1);
+    }
+  }
+</style>
