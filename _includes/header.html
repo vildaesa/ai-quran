@@ -1,3 +1,4 @@
+
 <ion-header class="ion-no-border minimalist-header">
   <ion-toolbar class="minimalist-toolbar">
     <ion-buttons slot="start">
@@ -7,7 +8,7 @@
     <ion-title id="chat-title" class="minimalist-title">{{ page.title }}</ion-title>
     
     <ion-buttons slot="end">
-      <!-- TOMBOL BARU: Buka Al-Quran Digital -->
+      <!-- Tombol Buka Al-Quran Digital -->
       <ion-button id="open-quran-btn" fill="clear" class="minimalist-btn-quran">
         <ion-icon slot="icon-only" name="book-outline"></ion-icon>
       </ion-button>
@@ -19,38 +20,50 @@
   </ion-toolbar>
 </ion-header>
 
-<!-- MODAL AL-QURAN DIGITAL (MODERN SWIPEABLE & FULLSCREEN ON MOBILE) -->
-<ion-modal id="quran-modal" trigger="open-quran-btn" initial-breakpoint="1" breakpoints="[0, 0.5, 1]">
+<!-- MODAL AL-QURAN DIGITAL (MODERN FULLSCREEN LAYOUT) -->
+<ion-modal id="quran-modal" trigger="open-quran-btn">
   <ion-header class="ion-no-border quran-modal-header">
     <ion-toolbar class="minimalist-toolbar">
       <ion-buttons slot="start">
+        <!-- Tombol kembali ke daftar buku surah (disembunyikan saat di halaman utama buku) -->
+        <ion-button id="quran-back-btn" fill="clear" class="quran-back-button" style="display: none;">
+          <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
+        </ion-button>
+        <!-- Tombol tutup modal -->
         <ion-button id="close-quran-btn" fill="clear" class="quran-close-btn">
           <ion-icon slot="icon-only" name="close-outline"></ion-icon>
         </ion-button>
       </ion-buttons>
-      <ion-title class="minimalist-title">Al-Quran Digital</ion-title>
+      
+      <ion-title id="quran-modal-title" class="minimalist-title">Al-Quran Digital</ion-title>
     </ion-toolbar>
-    
-    <!-- Filter Seleksi Surah -->
-    <div class="quran-selector-container">
-      <div class="selector-wrapper">
-        <label for="quran-surah-select">Pilih Surah:</label>
-        <select id="quran-surah-select" class="quran-native-select">
-          <option value="">Memuat surah...</option>
-        </select>
-      </div>
-    </div>
   </ion-header>
 
   <ion-content class="quran-modal-content">
-    <!-- Konten Ayat Al-Quran -->
-    <div id="quran-verses-container" class="quran-verses-wrapper">
-      <div class="quran-welcome-state">
-        <ion-icon name="book-outline" class="quran-large-icon"></ion-icon>
-        <h4>Selamat Datang di Al-Quran Digital</h4>
-        <p>Silakan pilih Surah di bagian atas untuk mulai membaca, merenungi terjemahan, dan mendengarkan murottal ayat suci.</p>
+    
+    <!-- VIEW 1: DAFTAR BUKU SURAH (GRID CARDS) -->
+    <div id="quran-book-view" class="quran-book-wrapper">
+      <div class="quran-book-header">
+        <h3>Indeks Surah</h3>
+        <p>Silakan ketuk salah satu surah untuk mulai membaca mushaf</p>
+      </div>
+      
+      <!-- Grid daftar surah akan dirender di sini oleh JS -->
+      <div id="quran-surah-grid" class="quran-surah-grid">
+        <div class="menu-loading-container" style="grid-column: 1/-1; padding: 60px 0;">
+          <ion-spinner name="crescent" class="custom-spinner"></ion-spinner>
+          <p style="margin-top: 12px; color: #718096;">Membuka lembaran mushaf...</p>
+        </div>
       </div>
     </div>
+
+    <!-- VIEW 2: HALAMAN BACAAN AYAT (Secara default disembunyikan) -->
+    <div id="quran-reading-view" class="quran-reading-wrapper" style="display: none;">
+      <div id="quran-verses-container" class="quran-verses-wrapper">
+        <!-- Ayat suci akan dirender di sini oleh JS -->
+      </div>
+    </div>
+
   </ion-content>
 </ion-modal>
 
@@ -86,9 +99,8 @@
     transition: all 0.2s ease-in-out;
   }
 
-  /* Tombol Al-Quran */
   .minimalist-btn-quran {
-    --color: #2b6cb0; /* Biru Islami yang elegan */
+    --color: #2b6cb0;
     --background-hover: rgba(43, 108, 176, 0.06);
     --border-radius: 8px;
     margin: 4px;
@@ -103,11 +115,11 @@
     transition: all 0.2s ease-in-out;
   }
 
-  /* --- STYLING MODAL AL-QURAN --- */
+  /* --- STYLING MODAL AL-QURAN (FULLSCREEN PREMIUM) --- */
   #quran-modal {
     --height: 100%;
     --width: 100%;
-    --max-width: 680px; /* Batas lebar agar nyaman dibaca di desktop */
+    --max-width: 760px; /* Lebar optimal desktop agar tidak terlalu meluas */
     --border-radius: 16px 16px 0 0;
   }
 
@@ -116,85 +128,62 @@
     border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   }
 
-  .quran-close-btn {
+  .quran-close-btn, .quran-back-button {
     --color: #4a5568;
     --background-hover: rgba(0, 0, 0, 0.04);
     --border-radius: 50%;
   }
 
-  /* Bar Pemilih Surah */
-  .quran-selector-container {
-    padding: 12px 16px;
-    background: #f7fafc;
-  }
-
-  .selector-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: #ffffff;
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    border-radius: 12px;
-    padding: 8px 16px;
-  }
-
-  .selector-wrapper label {
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: #718096;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  .quran-native-select {
-    flex: 1;
-    border: none;
-    outline: none;
-    background: transparent;
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: #2d3748;
-    cursor: pointer;
-  }
-
-  /* Konten Al-Quran */
   .quran-modal-content {
     --background: #ffffff;
   }
 
-  .quran-verses-wrapper {
+  /* INDEKS BUKU SURAH */
+  .quran-book-wrapper {
     padding: 24px 20px;
-    max-width: 600px;
-    margin: 0 auto;
+    animation: fadeIn 0.3s ease-out;
   }
 
-  .quran-welcome-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 60px 20px;
-    color: #718096;
-  }
-
-  .quran-large-icon {
-    font-size: 64px;
-    color: #cbd5e0;
+  .quran-book-header {
     margin-bottom: 24px;
   }
 
-  .quran-welcome-state h4 {
-    font-size: 1.15rem;
-    font-weight: 600;
-    color: #2d3748;
-    margin: 0 0 10px 0;
+  .quran-book-header h3 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #1a202c;
+    margin: 0 0 4px 0;
+    letter-spacing: -0.02em;
   }
 
-  .quran-welcome-state p {
+  .quran-book-header p {
     font-size: 0.9rem;
-    line-height: 1.5;
+    color: #718096;
     margin: 0;
+  }
+
+  /* Grid Buku */
+  .quran-surah-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+  }
+
+  /* Tampilan halaman bacaan */
+  .quran-reading-wrapper {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .quran-verses-wrapper {
+    padding: 24px 20px;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  /* --- ANIMATIONS --- */
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 
   /* --- DARK MODE --- */
@@ -214,7 +203,7 @@
     }
 
     .minimalist-btn-quran {
-      --color: #63b3ed; /* Biru terang di dark mode */
+      --color: #63b3ed;
       --background-hover: rgba(99, 179, 237, 0.08);
     }
     
@@ -223,22 +212,12 @@
       --background-hover: rgba(254, 178, 178, 0.1);
     }
 
-    .quran-modal-header, .quran-selector-container {
+    .quran-modal-header {
       --background: #1a1a1a;
-      background: #1a1a1a;
       border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
 
-    .selector-wrapper {
-      background: #252525;
-      border-color: rgba(255, 255, 255, 0.06);
-    }
-
-    .quran-native-select {
-      color: #e2e8f0;
-    }
-
-    .quran-close-btn {
+    .quran-close-btn, .quran-back-button {
       --color: #a0aec0;
     }
 
@@ -246,12 +225,12 @@
       --background: #121212;
     }
 
-    .quran-welcome-state {
-      color: #a0aec0;
+    .quran-book-header h3 {
+      color: #f7fafc;
     }
 
-    .quran-welcome-state h4 {
-      color: #f7fafc;
+    .quran-book-header p {
+      color: #a0aec0;
     }
   }
 </style>
