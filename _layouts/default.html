@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{ page.lang | default: site.lang | default: 'id' }}">
 <head>
-  <!-- Meta tag tambahan untuk mengoptimalkan safe-area & mencegah zooming tak sengaja di seluler -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   
   {% include head.html %}
@@ -9,12 +8,10 @@
   <style>
     /* --- OPTIMASI KINERJA LAYOUT --- */
     
-    /* Mencegah lag transisi saat panel menu ditarik/geser */
     ion-split-pane {
       will-change: transform;
     }
 
-    /* Mengunci area body utama agar tidak terjadi bounce scroll aneh di beberapa browser mobile */
     body {
       overscroll-behavior-y: contain;
       background: #fdfdfd;
