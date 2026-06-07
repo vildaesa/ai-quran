@@ -1,10 +1,217 @@
-<ion-content id="chat-content" scroll-events="true">
+<ion-content id="chat-content" scroll-events="true" class="minimalist-content">
   <div class="chat-container" id="messages-container">
-    <!-- Pesan akan dirender disini -->
-    <div class="empty-chat" style="display: none;" id="empty-chat-placeholder">
-      <ion-icon name="chatbubbles-outline" style="font-size: 48px; color: #ccc;"></ion-icon>
-      <p>Mulai percakapan baru<br>Kirim pesan ke AI!</p>
+    
+    <!-- Contoh Balon Chat (Bisa dihapus/disesuaikan saat render dinamis) -->
+    <!-- 
+    <div class="message-wrapper ai">
+      <div class="message-bubble">Halo! Ada yang bisa saya bantu hari ini?</div>
+    </div>
+    <div class="message-wrapper user">
+      <div class="message-bubble">Halo, tolong buatkan desain minimalis.</div>
+    </div> 
+    -->
+
+    <!-- Empty Chat Placeholder -->
+    <div class="empty-chat-wrapper" id="empty-chat-placeholder">
+      <div class="empty-chat-icon-container">
+        <ion-icon name="chatbubbles-outline"></ion-icon>
+      </div>
+      <h3 class="empty-chat-title">Mulai Diskusi Baru</h3>
+      <p class="empty-chat-subtitle">Tanyakan apa saja. AI siap membantu menjawab pertanyaan dan menganalisis ide-idemu.</p>
+    </div>
+
+  </div>
+
+  <!-- Typing Indicator (Muncul secara dinamis) -->
+  <div class="typing-indicator-container" id="typing-indicator" style="display: none;">
+    <div class="typing-bubble">
+      <span class="typing-dot"></span>
+      <span class="typing-dot"></span>
+      <span class="typing-dot"></span>
     </div>
   </div>
-  <!-- typing indicator akan muncul di sini secara dinamis -->
 </ion-content>
+
+<style>
+  /* --- BASE CONTENT STYLING --- */
+  .minimalist-content {
+    --background: #fdfdfd; /* Warna putih hangat yang sangat elegan */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  .chat-container {
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 800px; /* Batas lebar agar nyaman dibaca di tablet/desktop */
+    margin: 0 auto;
+    min-height: 100%;
+    justify-content: flex-start;
+  }
+
+  /* --- EMPTY STATE STYLE (MINIMALIST) --- */
+  .empty-chat-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    margin: auto 0; /* Menaruh tepat di tengah vertikal container */
+    padding: 40px 24px;
+    animation: fadeIn 0.4s ease-out;
+  }
+
+  .empty-chat-icon-container {
+    background-color: rgba(0, 0, 0, 0.03);
+    padding: 20px;
+    border-radius: 50%;
+    margin-bottom: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .empty-chat-icon-container ion-icon {
+    font-size: 36px;
+    color: #a0aec0; /* Abu-abu netral lembut */
+  }
+
+  .empty-chat-title {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0 0 8px 0;
+    letter-spacing: -0.01em;
+  }
+
+  .empty-chat-subtitle {
+    font-size: 0.9rem;
+    color: #718096;
+    line-height: 1.5;
+    margin: 0;
+    max-width: 280px;
+  }
+
+  /* --- CHAT BUBBLE SYSTEM (PREMIUM LOOK) --- */
+  .message-wrapper {
+    display: flex;
+    width: 100%;
+    margin-bottom: 4px;
+    animation: slideUp 0.25s ease-out;
+  }
+
+  .message-wrapper.user {
+    justify-content: flex-end;
+  }
+
+  .message-wrapper.ai {
+    justify-content: flex-start;
+  }
+
+  .message-bubble {
+    max-width: 75%;
+    padding: 12px 16px;
+    font-size: 0.95rem;
+    line-height: 1.45;
+  }
+
+  /* Balon Chat User: Sudut kanan bawah tajam */
+  .message-wrapper.user .message-bubble {
+    background-color: #1a202c; /* Hitam arang */
+    color: #ffffff;
+    border-radius: 18px 18px 4px 18px;
+  }
+
+  /* Balon Chat AI: Sudut kiri bawah tajam */
+  .message-wrapper.ai .message-bubble {
+    background-color: #f1f3f5; /* Abu terang */
+    color: #1a202c;
+    border-radius: 18px 18px 18px 4px;
+  }
+
+  /* --- TYPING INDICATOR (PREMIUM DOTS) --- */
+  .typing-indicator-container {
+    padding: 0 16px 16px 16px;
+    display: flex;
+    justify-content: flex-start;
+    max-width: 800px;
+    margin: 0 auto;
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  .typing-bubble {
+    background-color: #f1f3f5;
+    padding: 12px 18px;
+    border-radius: 18px 18px 18px 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .typing-dot {
+    width: 6px;
+    height: 6px;
+    background-color: #a0aec0;
+    border-radius: 50%;
+    display: inline-block;
+    animation: typingBounce 1.4s infinite ease-in-out both;
+  }
+
+  .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+  .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+  /* --- ANIMATIONS --- */
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes typingBounce {
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1.0); }
+  }
+
+  /* --- DARK MODE SUPPORT --- */
+  @media (prefers-color-scheme: dark) {
+    .minimalist-content {
+      --background: #121212;
+    }
+
+    .empty-chat-icon-container {
+      background-color: rgba(255, 255, 255, 0.03);
+    }
+
+    .empty-chat-icon-container ion-icon {
+      color: #718096;
+    }
+
+    .empty-chat-title {
+      color: #f7fafc;
+    }
+
+    .empty-chat-subtitle {
+      color: #a0aec0;
+    }
+
+    /* Balon chat saat mode gelap */
+    .message-wrapper.user .message-bubble {
+      background-color: #f7fafc; /* User pakai warna putih terang */
+      color: #121212;
+    }
+
+    .message-wrapper.ai .message-bubble, .typing-bubble {
+      background-color: #1e1e1e; /* AI pakai abu sangat gelap */
+      color: #e2e8f0;
+    }
+
+    .typing-dot {
+      background-color: #718096;
+    }
+  }
+</style>
