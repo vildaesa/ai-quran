@@ -1,3 +1,7 @@
+
+/* --- IMPORT GOOGLE FONTS TAMBAHAN UNTUK ARABIC UTMANI --- */
+@import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=Scheherazade+New:wght@400;700&display=swap');
+
 :root {
   --sidebar-width: 280px;
 }
@@ -117,7 +121,7 @@ body, ion-app, ion-item, ion-label, ion-title, ion-button, ion-input, ion-textar
 
 
 /* =========================================
-  STYLING INDEKS BUKU SURAH (NEW!)
+  STYLING INDEKS BUKU SURAH
   =========================================
 */
 .quran-surah-card {
@@ -176,7 +180,7 @@ body, ion-app, ion-item, ion-label, ion-title, ion-button, ion-input, ion-textar
 }
 
 .surah-arabic-name {
-  font-family: 'Noto Naskh Arabic', serif;
+  font-family: 'Amiri', 'Noto Naskh Arabic', serif;
   font-size: 1.25rem;
   color: #2b6cb0;
   font-weight: 500;
@@ -220,15 +224,18 @@ body, ion-app, ion-item, ion-label, ion-title, ion-button, ion-input, ion-textar
   font-weight: 600;
 }
 
+/* SOLUSI HURUF ARAB KOTAK-KOTAK (DIOPTIMALKAN DENGAN FALLBACK AMIRI & SCHEHERAZADE) */
 .ayah-arabic {
-  font-family: 'Noto Naskh Arabic', serif;
-  font-size: 1.85rem;
-  line-height: 2.2;
+  font-family: 'Amiri', 'Scheherazade New', 'Noto Naskh Arabic', serif;
+  font-size: 2.1rem; /* Ukuran dinaikkan agar tanda harakat mudah dibaca */
+  line-height: 2.4;  /* Tinggi baris longgar agar harakat tasydid/fathah tegak tidak bertabrakan */
   color: #1a202c;
   text-align: right;
   direction: rtl;
   margin: 8px 0;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
+  word-spacing: 2px;  /* Spasi kata yang longgar mencegah rendering bertumpuk */
+  text-rendering: optimizeLegibility;
 }
 
 .ayah-translation {
@@ -263,6 +270,15 @@ body, ion-app, ion-item, ion-label, ion-title, ion-button, ion-input, ion-textar
   margin-inline-end: 6px;
 }
 
+/* --- SPLIT PANE & SIDEBAR --- */
+ion-split-pane {
+  --side-width: var(--sidebar-width);
+  --side-max-width: 320px;
+}
+ion-menu {
+  --width: var(--sidebar-width);
+}
+
 /* --- ANIMASI --- */
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(10px); }
@@ -271,6 +287,7 @@ body, ion-app, ion-item, ion-label, ion-title, ion-button, ion-input, ion-textar
 
 /* --- PENYESUAIAN GELAP (DARK THEME) --- */
 @media (prefers-color-scheme: dark) {
+  /* AI */
   .message-wrapper.ai { border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
   .message-wrapper.ai::before { color: #a0aec0; }
   .message-wrapper.ai .message-bubble { color: #e2e8f0 !important; }
@@ -297,15 +314,10 @@ body, ion-app, ion-item, ion-label, ion-title, ion-button, ion-input, ion-textar
     background-color: rgba(99, 179, 237, 0.12);
     color: #63b3ed;
   }
-  .surah-meta-info h4 {
-    color: #f7fafc;
-  }
-  .surah-meta-info p {
-    color: #a0aec0;
-  }
-  .surah-arabic-name {
-    color: #63b3ed;
-  }
+  .surah-meta-info h4 { color: #f7fafc; }
+  .surah-meta-info p { color: #a0aec0; }
+  .surah-arabic-name { color: #63b3ed; }
+  
   .ayah-card {
     border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
   }
@@ -323,5 +335,33 @@ body, ion-app, ion-item, ion-label, ion-title, ion-button, ion-input, ion-textar
     --color: #63b3ed;
     --background: rgba(99, 179, 237, 0.1);
     --background-hover: rgba(99, 179, 237, 0.2);
+  }
+
+  /* =========================================
+     SOLUSI JITU UNTUK TOOLBAR & HEADER DARK MODE (ION-MENU & ION-MODAL)
+     =========================================
+     Memaksa Shadow DOM Ionic untuk mengubah background menjadi gelap solid.
+  */
+  ion-menu ion-header,
+  ion-menu ion-toolbar,
+  ion-modal ion-header,
+  ion-modal ion-toolbar {
+    --background: #181818 !important; /* Warna gelap minimalis */
+    background: #181818 !important;
+    color: #ffffff !important;
+  }
+
+  /* Mengubah warna teks judul toolbar modal/menu */
+  ion-menu ion-title,
+  ion-modal ion-title,
+  .minimalist-menu-title,
+  #quran-modal-title {
+    color: #f7fafc !important;
+  }
+
+  /* Mengubah tombol-tombol navigasi di toolbar */
+  ion-menu ion-button,
+  ion-modal ion-button {
+    --color: #cbd5e0 !important;
   }
 }
