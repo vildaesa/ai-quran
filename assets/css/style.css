@@ -274,7 +274,7 @@ body, ion-app, ion-item, ion-label, ion-title, ion-button, ion-input, ion-textar
 
 .audio-play-btn ion-icon {
   font-size: 14px;
-  margin-inline-end: 6px;
+  margin-inline-end: 0px;
 }
 
 
