@@ -5,11 +5,11 @@
   let isWaitingResponse = false; // mencegah spam saat AI merespon / typing
   let currentTypingIndicatorElement = null;
   let aiMessageElement = null;   // Referensi untuk bubble AI yang sedang streaming
-  
+
   // Audio state Al-Quran
   let currentAudioPlayer = null; // Memegang instance Audio yang sedang menyala
   let activeAudioBtn = null;     // Memegang tombol ikon aktif agar bisa diganti ikonnya ke "pause"
-  
+
   // STATE: Playlist Murottal Kontinu
   let isContinuousPlaying = false; 
   let currentSurahVerses = [];    // Menyimpan daftar ayat yang sedang dibuka [{ nomorAyat, audioUrl }]
@@ -166,7 +166,7 @@
       const activeClass = isActive ? 'active' : '';
       const titleEscaped = escapeHtml(conv.title);
       const messageCount = conv.messages.length;
-      
+
       html += `
         <ion-item class="history-item ${activeClass}" data-conv-id="${conv.id}" button detail="false">
           <ion-icon name="chatbubble-outline" slot="start" class="history-icon"></ion-icon>
@@ -231,7 +231,7 @@
     saveToLocalStorage();
     renderSidebar();
     renderCurrentChat();
-    
+
     const currentConv = conversations.find(c => c.id === currentConversationId);
     if (currentConv) chatTitleEl.innerText = currentConv.title;
     else chatTitleEl.innerText = 'AI Chat';
@@ -276,7 +276,7 @@
       messages.forEach(msg => {
         const wrapperDiv = document.createElement('div');
         wrapperDiv.className = `message-wrapper ${msg.sender}`;
-        
+
         const bubbleDiv = document.createElement('div');
         bubbleDiv.className = 'message-bubble';
 
@@ -301,7 +301,7 @@
 
   function showTypingIndicatorOnly() {
     removeTypingIndicator();
-    
+
     if (emptyPlaceholder) {
       emptyPlaceholder.style.display = 'none';
     }
@@ -309,7 +309,7 @@
     const typingDiv = document.createElement('div');
     typingDiv.className = 'typing-indicator-container';
     typingDiv.id = 'live-typing-indicator';
-    
+
     const bubbleDiv = document.createElement('div');
     bubbleDiv.className = 'typing-bubble';
 
@@ -318,7 +318,7 @@
       dot.className = 'typing-dot';
       bubbleDiv.appendChild(dot);
     }
-    
+
     typingDiv.appendChild(bubbleDiv);
     messagesContainer.appendChild(typingDiv);
     scrollToBottom();
@@ -344,7 +344,7 @@
       timestamp: Date.now()
     };
     conv.messages.push(newMsg);
-    
+
     if (emptyPlaceholder) {
       emptyPlaceholder.style.display = 'none';
     }
@@ -573,7 +573,7 @@
 
   async function renderQuranBookGrid() {
     if (!quranSurahGrid) return;
-    
+
     quranSurahGrid.innerHTML = `
       <div class="menu-loading-container" style="grid-column: 1/-1; padding: 100px 0;">
         <ion-spinner name="crescent" class="custom-spinner"></ion-spinner>
@@ -583,7 +583,7 @@
     try {
       const response = await fetch('https://equran.id/api/v2/surat');
       const result = await response.json();
-      
+
       let surahArray = null;
       if (result && Array.isArray(result.data)) {
         surahArray = result.data;
@@ -611,7 +611,7 @@
             </div>
           `;
         });
-        
+
         quranSurahGrid.innerHTML = html;
 
         document.querySelectorAll('.quran-surah-card').forEach(card => {
@@ -634,7 +634,7 @@
           <p>Terjadi kesalahan atau hambatan jaringan internet saat memuat daftar surah.</p>
           <ion-button fill="outline" size="small" id="retry-load-quran" style="margin-top: 16px; --color: #2b6cb0;">Coba Lagi</ion-button>
         </div>`;
-        
+
       document.getElementById('retry-load-quran')?.addEventListener('click', renderQuranBookGrid);
     }
   }
@@ -745,7 +745,7 @@
           <p>Terjadi gangguan koneksi pada server penyedia ayat. Mohon periksa sinyal internet Anda dan ketuk tombol di bawah.</p>
           <ion-button fill="outline" size="small" id="retry-load-verses" style="margin-top: 16px; --color: #2b6cb0;">Coba Lagi</ion-button>
         </div>`;
-        
+
       document.getElementById('retry-load-verses')?.addEventListener('click', () => fetchAndRenderSurah(surahNumber));
     }
   }
@@ -764,7 +764,7 @@
       const ayahNum = verse.nomorAyat || verse.numberInSurah;
       let arabicText = verse.teksArab || verse.text || "";
       const translationText = verse.teksIndonesia || verse.translation || 'Terjemahan tidak tersedia';
-      
+
       let audioUrl = '';
       if (verse.audio) {
         if (typeof verse.audio === 'object') {
@@ -803,252 +803,313 @@
         const btnEl = e.currentTarget;
         const audioSrc = btnEl.getAttribute('data-audio-src');
         const ayahNum = parseInt(btnEl.getAttribute('data-ayah-num'));
-        
+
         handleIndividualAyahPlay(audioSrc, ayahNum, btnEl);
       });
     });
   }
 
 
-  // ========================================================
-  // ENGINE LOGIC: PLAYLIST OTOMATIS BERURUTAN (FOOTER SYSTEM)
-  // ========================================================
+// ========================================================
+// AUDIO ENGINE V2
+// ========================================================
 
-  function enableContinuousPlayerControls() {
-    quranPlayAllBtn.style.display = 'block';
-    
-    // PERBAIKAN: Set kedua metode properti & atribut agar web component dipaksa render ulang secara instan
-    playAllIcon.name = 'play-outline';
-    playAllIcon.setAttribute('name', 'play-outline');
-    
-    playerCurrentAyahText.innerText = 'Ketuk tombol putar untuk mendengarkan surah secara kontinu';
+function destroyCurrentAudio() {
+  if (!currentAudioPlayer) return;
+
+  try {
+    currentAudioPlayer.pause();
+
+    currentAudioPlayer.onended = null;
+    currentAudioPlayer.onerror = null;
+    currentAudioPlayer.onwaiting = null;
+    currentAudioPlayer.oncanplay = null;
+
+    currentAudioPlayer.src = '';
+    currentAudioPlayer.load();
+  } catch (e) {
+    console.error(e);
   }
 
-  function resetContinuousPlayerState() {
-    if (currentAudioPlayer) {
-      currentAudioPlayer.pause();
-      currentAudioPlayer = null;
-    }
-    isContinuousPlaying = false;
-    currentPlayingIndex = -1;
-    activeAudioBtn = null;
+  currentAudioPlayer = null;
+}
 
-    quranPlayAllBtn.style.display = 'block';
-    quranPlayAllBtn.className = 'mini-control-btn play-main-btn';
-    quranStopBtn.style.display = 'none';
-    
-    // PERBAIKAN STATE IKON (RESET)
-    playAllIcon.name = 'play-outline';
-    playAllIcon.setAttribute('name', 'play-outline');
-    
-    playerCurrentAyahText.innerText = 'Putar semua surah';
+function updatePlayIcon(iconName) {
+  if (!playAllIcon) return;
 
-    document.querySelectorAll('.ayah-card').forEach(card => {
-      card.classList.remove('active-playing-ayah');
+  playAllIcon.setAttribute('name', iconName);
+}
+
+function updateAyahButtons(activeAyahNum = null) {
+  document.querySelectorAll('.audio-play-btn').forEach(btn => {
+    const ayahNum = Number(btn.dataset.ayahNum);
+
+    btn.innerHTML = `
+      <ion-icon
+        name="${ayahNum === activeAyahNum ? 'pause-outline' : 'play-outline'}"
+        slot="icon-only">
+      </ion-icon>
+    `;
+  });
+}
+
+function setupMediaSession(ayahNum) {
+  if (!('mediaSession' in navigator)) return;
+
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: `Ayat ${ayahNum}`,
+    artist: 'Al Quran Digital',
+    album: 'Murottal'
+  });
+
+  navigator.mediaSession.setActionHandler(
+    'play',
+    () => toggleContinuousPlay()
+  );
+
+  navigator.mediaSession.setActionHandler(
+    'pause',
+    () => toggleContinuousPlay()
+  );
+
+  navigator.mediaSession.setActionHandler(
+    'nexttrack',
+    () => playNextAyah()
+  );
+
+  navigator.mediaSession.setActionHandler(
+    'previoustrack',
+    () => playPrevAyah()
+  );
+}
+
+function enableContinuousPlayerControls() {
+  quranPlayAllBtn.style.display = 'block';
+
+  updatePlayIcon('play-outline');
+
+  playerCurrentAyahText.innerText =
+    'Ketuk tombol putar untuk mendengarkan surah';
+}
+
+function resetContinuousPlayerState() {
+  destroyCurrentAudio();
+
+  isContinuousPlaying = false;
+  currentPlayingIndex = -1;
+  activeAudioBtn = null;
+
+  quranStopBtn.style.display = 'none';
+
+  updatePlayIcon('play-outline');
+
+  playerCurrentAyahText.innerText =
+    'Putar semua surah';
+
+  updateAyahButtons();
+
+  document.querySelectorAll('.ayah-card').forEach(card => {
+    card.classList.remove('active-playing-ayah');
+  });
+}
+
+function highlightAyah(ayahNum) {
+  document.querySelectorAll('.ayah-card').forEach(card => {
+    card.classList.remove('active-playing-ayah');
+  });
+
+  const activeCard =
+    document.getElementById(`ayah-${ayahNum}`);
+
+  if (!activeCard) return;
+
+  activeCard.classList.add('active-playing-ayah');
+
+  const rect = activeCard.getBoundingClientRect();
+
+  if (
+    rect.top < 0 ||
+    rect.bottom > window.innerHeight
+  ) {
+    activeCard.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center'
     });
   }
+}
 
-  function toggleContinuousPlay() {
-    if (currentSurahVerses.length === 0) return;
+function playContinuousAyatByIndex(index) {
+  if (
+    index < 0 ||
+    index >= currentSurahVerses.length
+  ) {
+    resetContinuousPlayerState();
 
-    if (isContinuousPlaying) {
-      if (currentAudioPlayer && !currentAudioPlayer.paused) {
-        // PAUSE KONTINU
-        currentAudioPlayer.pause();
-        
-        // PERBAIKAN STATE IKON KE PLAY
-        playAllIcon.name = 'play-outline';
-        playAllIcon.setAttribute('name', 'play-outline');
-        
-        playerCurrentAyahText.innerText = `Murottal Ayat ${currentPlayingIndex + 1} sedang dijeda`;
-        
-        const activeCardBtn = document.querySelector(`#ayah-${currentPlayingIndex + 1} .audio-play-btn`);
-        if (activeCardBtn) {
-          activeCardBtn.innerHTML = `<ion-icon name="play-outline" slot="icon-only"></ion-icon>`;
-        }
-      } else if (currentAudioPlayer && currentAudioPlayer.paused) {
-        // RESUME KONTINU
-        currentAudioPlayer.play().catch(e => console.error("Gagal melanjutkan audio:", e));
-        
-        // PERBAIKAN STATE IKON KE PAUSE
-        playAllIcon.name = 'pause-outline';
-        playAllIcon.setAttribute('name', 'pause-outline');
-        
-        playerCurrentAyahText.innerText = `Melantunkan Ayat ${currentPlayingIndex + 1}...`;
-        
-        const activeCardBtn = document.querySelector(`#ayah-${currentPlayingIndex + 1} .audio-play-btn`);
-        if (activeCardBtn) {
-          activeCardBtn.innerHTML = `<ion-icon name="pause-outline" slot="icon-only"></ion-icon>`;
-        }
-      }
-    } else {
-      // MULAI FRESH DARI INDEKS 0
-      isContinuousPlaying = true;
-      currentPlayingIndex = 0;
-      
-      quranStopBtn.style.display = 'block';
-      
-      // PERBAIKAN STATE IKON KE PAUSE
-      playAllIcon.name = 'pause-outline';
-      playAllIcon.setAttribute('name', 'pause-outline');
-      
-      playContinuousAyatByIndex(currentPlayingIndex);
-    }
+    showAlert(
+      'Selesai Membaca',
+      'Lantunan satu surah telah selesai.'
+    );
+
+    return;
   }
 
-  function playContinuousAyatByIndex(index) {
-    if (index < 0 || index >= currentSurahVerses.length) {
-      resetContinuousPlayerState();
-      showAlert("Selesai Membaca", "Lantunan ayat suci satu surah penuh telah selesai dikumandangkan.");
-      return;
-    }
+  currentPlayingIndex = index;
 
-    currentPlayingIndex = index;
-    const ayahItem = currentSurahVerses[index];
-    const ayahNum = ayahItem.nomorAyat;
-    const audioUrl = ayahItem.audioUrl;
+  const ayah =
+    currentSurahVerses[index];
 
-    if (!audioUrl) {
-      playContinuousAyatByIndex(index + 1);
-      return;
-    }
-
-    document.querySelectorAll('.ayah-card').forEach(card => {
-      card.classList.remove('active-playing-ayah');
-    });
-
-    const activeCard = document.getElementById(`ayah-${ayahNum}`);
-    if (activeCard) {
-      activeCard.classList.add('active-playing-ayah');
-      activeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-
-    playerCurrentAyahText.innerText = `Melantunkan Ayat ${ayahNum}...`;
-
-    if (currentAudioPlayer) {
-      currentAudioPlayer.pause();
-    }
-
-    currentAudioPlayer = new Audio(audioUrl);
-    
-    const currentCardBtn = activeCard ? activeCard.querySelector('.audio-play-btn') : null;
-    if (currentCardBtn) {
-      currentCardBtn.innerHTML = `<ion-icon name="pause-outline" slot="icon-only"></ion-icon>`;
-      activeAudioBtn = currentCardBtn;
-    }
-
-    currentAudioPlayer.play().catch(err => {
-      console.error("Gagal melantunkan murottal:", err);
-      setTimeout(() => {
-        playContinuousAyatByIndex(index + 1);
-      }, 1000);
-    });
-
-    currentAudioPlayer.onended = () => {
-      if (currentCardBtn) {
-        currentCardBtn.innerHTML = `<ion-icon name="play-outline" slot="icon-only"></ion-icon>`;
-      }
-      playContinuousAyatByIndex(index + 1);
-    };
+  if (!ayah?.audioUrl) {
+    playContinuousAyatByIndex(index + 1);
+    return;
   }
 
-  function playNextAyah() {
-    if (currentSurahVerses.length === 0) return;
-    
-    if (!isContinuousPlaying) {
-      isContinuousPlaying = true;
-      currentPlayingIndex = 0;
-      quranStopBtn.style.display = 'block';
-      
-      playAllIcon.name = 'pause-outline';
-      playAllIcon.setAttribute('name', 'pause-outline');
-      
-      playContinuousAyatByIndex(currentPlayingIndex);
-    } else {
-      const nextIdx = currentPlayingIndex + 1;
-      if (nextIdx < currentSurahVerses.length) {
-        playContinuousAyatByIndex(nextIdx);
-      } else {
-        showAlert("Ujung Surah", "Ini adalah ayat terakhir dari surah yang sedang dibaca.");
-      }
-    }
-  }
+  destroyCurrentAudio();
 
-  function playPrevAyah() {
-    if (currentSurahVerses.length === 0) return;
+  const audio = new Audio(ayah.audioUrl);
 
-    if (isContinuousPlaying) {
-      const prevIdx = currentPlayingIndex - 1;
-      if (prevIdx >= 0) {
-        playContinuousAyatByIndex(prevIdx);
-      } else {
-        showAlert("Awal Surah", "Ini sudah berada pada ayat pertama dari surah.");
-      }
-    }
-  }
+  currentAudioPlayer = audio;
 
-  function handleIndividualAyahPlay(audioUrl, ayahNum, buttonElement) {
-    const index = ayahNum - 1;
+  highlightAyah(ayah.nomorAyat);
 
-    if (isContinuousPlaying && currentPlayingIndex === index) {
-      toggleContinuousPlay();
-      return;
-    }
+  updateAyahButtons(ayah.nomorAyat);
 
-    isContinuousPlaying = true;
-    currentPlayingIndex = index;
-    quranStopBtn.style.display = 'block';
-    
-    playAllIcon.name = 'pause-outline';
-    playAllIcon.setAttribute('name', 'pause-outline');
-    
-    playContinuousAyatByIndex(index);
-  }
+  playerCurrentAyahText.innerText =
+    `Memuat Ayat ${ayah.nomorAyat}...`;
 
-function forceIconRefresh(iconElement) {
-    if (!iconElement) return;
-    
-    // Teknik memaksa browser melakukan layout ulang pada icon
-    iconElement.style.visibility = 'visible';
-    iconElement.style.display = 'block';
-    
-    // Refresh name attribute secara paksa
-    const currentName = iconElement.getAttribute('name');
-    iconElement.removeAttribute('name');
+  updatePlayIcon('pause-outline');
+
+  setupMediaSession(ayah.nomorAyat);
+
+  audio.onwaiting = () => {
+    playerCurrentAyahText.innerText =
+      `Buffering Ayat ${ayah.nomorAyat}...`;
+  };
+
+  audio.oncanplay = () => {
+    playerCurrentAyahText.innerText =
+      `Melantunkan Ayat ${ayah.nomorAyat}...`;
+  };
+
+  audio.onerror = () => {
+    console.warn(
+      'Audio gagal:',
+      ayah.nomorAyat
+    );
+
     setTimeout(() => {
-        iconElement.setAttribute('name', currentName);
-    }, 10);
+      playContinuousAyatByIndex(
+        currentPlayingIndex + 1
+      );
+    }, 500);
+  };
+
+  audio.onended = () => {
+    playContinuousAyatByIndex(
+      currentPlayingIndex + 1
+    );
+  };
+
+  audio.play().catch(err => {
+    console.error(err);
+
+    setTimeout(() => {
+      playContinuousAyatByIndex(
+        currentPlayingIndex + 1
+      );
+    }, 500);
+  });
 }
 
-// Update fungsi toggleContinuousPlay agar memanggil forceIconRefresh
 function toggleContinuousPlay() {
-    if (currentSurahVerses.length === 0) return;
+  if (!currentSurahVerses.length) return;
 
-    if (isContinuousPlaying) {
-      if (currentAudioPlayer && !currentAudioPlayer.paused) {
-        currentAudioPlayer.pause();
-        playAllIcon.name = 'play-outline';
-        playAllIcon.setAttribute('name', 'play-outline');
-        forceIconRefresh(playAllIcon); // Force Refresh
-        playerCurrentAyahText.innerText = `Murottal Ayat ${currentPlayingIndex + 1} dijeda`;
-      } else if (currentAudioPlayer && currentAudioPlayer.paused) {
-        currentAudioPlayer.play().catch(e => console.error(e));
-        playAllIcon.name = 'pause-outline';
-        playAllIcon.setAttribute('name', 'pause-outline');
-        forceIconRefresh(playAllIcon); // Force Refresh
-        playerCurrentAyahText.innerText = `Melantunkan Ayat ${currentPlayingIndex + 1}...`;
-      }
-    } else {
-      isContinuousPlaying = true;
-      currentPlayingIndex = 0;
-      quranStopBtn.style.display = 'block';
-      playAllIcon.name = 'pause-outline';
-      playAllIcon.setAttribute('name', 'pause-outline');
-      forceIconRefresh(playAllIcon); // Force Refresh
-      playContinuousAyatByIndex(currentPlayingIndex);
-    }
+  if (!isContinuousPlaying) {
+    isContinuousPlaying = true;
+
+    quranStopBtn.style.display = 'block';
+
+    currentPlayingIndex =
+      currentPlayingIndex < 0
+        ? 0
+        : currentPlayingIndex;
+
+    playContinuousAyatByIndex(
+      currentPlayingIndex
+    );
+
+    return;
+  }
+
+  if (!currentAudioPlayer) return;
+
+  if (currentAudioPlayer.paused) {
+    currentAudioPlayer.play();
+
+    updatePlayIcon('pause-outline');
+
+    playerCurrentAyahText.innerText =
+      `Melantunkan Ayat ${currentPlayingIndex + 1}...`;
+  } else {
+    currentAudioPlayer.pause();
+
+    updatePlayIcon('play-outline');
+
+    playerCurrentAyahText.innerText =
+      `Murottal Ayat ${currentPlayingIndex + 1} dijeda`;
+  }
 }
 
+function playNextAyah() {
+  if (!currentSurahVerses.length) return;
+
+  isContinuousPlaying = true;
+
+  quranStopBtn.style.display = 'block';
+
+  playContinuousAyatByIndex(
+    currentPlayingIndex + 1
+  );
+}
+
+function playPrevAyah() {
+  if (!currentSurahVerses.length) return;
+
+  isContinuousPlaying = true;
+
+  quranStopBtn.style.display = 'block';
+
+  playContinuousAyatByIndex(
+    Math.max(0, currentPlayingIndex - 1)
+  );
+}
+
+function handleIndividualAyahPlay(
+  audioUrl,
+  ayahNum,
+  buttonElement
+) {
+  const index =
+    currentSurahVerses.findIndex(
+      v => v.nomorAyat === ayahNum
+    );
+
+  if (index === -1) return;
+
+  if (
+    currentPlayingIndex === index &&
+    currentAudioPlayer &&
+    !currentAudioPlayer.paused
+  ) {
+    toggleContinuousPlay();
+    return;
+  }
+
+  isContinuousPlaying = true;
+
+  quranStopBtn.style.display = 'block';
+
+  playContinuousAyatByIndex(index);
+}
   // ---------- INITIALIZE APP ----------
   function init() {
     messagesContainer = document.getElementById('messages-container');
@@ -1094,7 +1155,7 @@ function toggleContinuousPlay() {
         sendUserMessage();
       }
     });
-    
+
     document.getElementById('new-chat-btn')?.addEventListener('click', () => createNewChat());
     document.getElementById('clear-current-chat-btn')?.addEventListener('click', () => clearCurrentChat());
     document.getElementById('scroll-top-btn')?.addEventListener('click', () => scrollToTop());
