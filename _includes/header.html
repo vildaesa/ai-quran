@@ -62,44 +62,62 @@
 
   </ion-content>
 
-  <!-- FOOTER PEMUTAR MUSIK MINIMALIS DI DALAM MODAL -->
-  <ion-footer id="quran-modal-footer" class="ion-no-border quran-mini-player-footer" style="display: none;">
-    <div class="mini-player-container">
-      
-      <!-- Progress / Info Ayat -->
-      <div class="mini-player-info">
-        <span id="player-current-ayah" class="mini-player-subtext"></span>
-      </div>
-
-      <!-- Tombol Kontrol Musik (Dengan slot="icon-only" yang sudah diperbaiki) -->
-      <div class="mini-player-controls">
-        <!-- Ke Ayat Sebelumnya -->
-        <ion-button fill="clear" id="quran-prev-btn" class="mini-control-btn">
-          <ion-icon name="play-back-outline" slot="icon-only"></ion-icon>
-        </ion-button>
-
-        <!-- Play / Pause Utama -->
-        <ion-button fill="clear" id="quran-play-all-btn" class="mini-control-btn play-main-btn">
-          <ion-icon name="play-outline" id="play-all-icon" slot="icon-only"></ion-icon>
-        </ion-button>
-
-        <!-- Stop -->
-        <ion-button fill="clear" id="quran-stop-btn" class="mini-control-btn stop-main-btn" style="display: none;">
-          <ion-icon name="stop-outline" slot="icon-only"></ion-icon>
-        </ion-button>
-
-        <!-- Ke Ayat Berikutnya -->
-        <ion-button fill="clear" id="quran-next-btn" class="mini-control-btn">
-          <ion-icon name="play-forward-outline" slot="icon-only"></ion-icon>
-        </ion-button>
-      </div>
-
+<ion-footer id="quran-modal-footer" class="ion-no-border quran-mini-player-footer" style="display: none;">
+  <div class="mini-player-container">
+    <div class="mini-player-info">
+      <span id="player-current-ayah" class="mini-player-subtext">Ketuk tombol putar...</span>
     </div>
-  </ion-footer>
+
+    <div class="mini-player-controls">
+      <ion-button fill="clear" id="quran-prev-btn" class="mini-control-btn">
+        <ion-icon name="play-back-outline" slot="icon-only" class="force-visible"></ion-icon>
+      </ion-button>
+
+      <ion-button fill="clear" id="quran-play-all-btn" class="mini-control-btn play-main-btn">
+        <ion-icon name="play-outline" id="play-all-icon" slot="icon-only" class="force-visible"></ion-icon>
+      </ion-button>
+
+      <ion-button fill="clear" id="quran-stop-btn" class="mini-control-btn stop-main-btn" style="display: none;">
+        <ion-icon name="stop-outline" slot="icon-only" class="force-visible"></ion-icon>
+      </ion-button>
+
+      <ion-button fill="clear" id="quran-next-btn" class="mini-control-btn">
+        <ion-icon name="play-forward-outline" slot="icon-only" class="force-visible"></ion-icon>
+      </ion-button>
+    </div>
+  </div>
+</ion-footer>
 </ion-modal>
 
 <style>
   /* --- GAYA MINIMALIS MODERN (LIGHT MODE) --- */
+  /* Force Visibility Fix */
+  .force-visible {
+    visibility: visible !important;
+    display: block !important;
+    opacity: 1 !important;
+    contain: none !important;
+  }
+
+  .mini-control-btn {
+    --color: #2b6cb0;
+    --background: transparent;
+    --border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    margin: 0 4px;
+    /* Memastikan tombol tidak tersembunyi */
+    visibility: visible !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Hilangkan override tema yang mungkin menyembunyikan ikon */
+  .mini-control-btn ion-icon {
+    font-size: 24px !important;
+    pointer-events: none;
+  }
   .minimalist-header {
     --background: #ffffff;
     border-bottom: 1px solid rgba(0, 0, 0, 0.06); 
