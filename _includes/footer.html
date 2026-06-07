@@ -1,12 +1,125 @@
-<ion-footer>
-  <ion-toolbar>
-    <div class="input-container">
-      <ion-input id="message-input" placeholder="Ketik pesan..." value="" autocomplete="off"></ion-input>
-<ion-buttons>
-      <ion-button id="send-message-btn" class="send-btn" color="primary">
-        <ion-icon name="send-outline" slot="icon-only"></ion-icon>
-      </ion-button>
-</ion-buttons>
+<ion-footer class="ion-no-border minimalist-footer">
+  <ion-toolbar class="minimalist-footer-toolbar">
+    <div class="input-wrapper-container">
+      
+      <!-- Input Box -->
+      <ion-input 
+        id="message-input" 
+        placeholder="Tanya apa saja ke AI..." 
+        value="" 
+        autocomplete="off"
+        class="minimalist-input-field">
+      </ion-input>
+
+      <!-- Tombol Kirim -->
+      <ion-buttons class="minimalist-send-buttons-group">
+        <ion-button id="send-message-btn" class="minimalist-send-btn" fill="clear">
+          <ion-icon name="arrow-up-outline" slot="icon-only"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+
     </div>
   </ion-toolbar>
 </ion-footer>
+
+<style>
+  /* --- BASE FOOTER STYLE --- */
+  .minimalist-footer {
+    --background: #fdfdfd; /* Selaras dengan background ion-content */
+    background: #fdfdfd;
+    padding-bottom: env(safe-area-inset-bottom, 12px); /* Mengatasi gap navigasi OS modern */
+  }
+
+  .minimalist-footer-toolbar {
+    --background: transparent;
+    --border-style: none;
+    --padding-start: 16px;
+    --padding-end: 16px;
+    --padding-top: 8px;
+    --padding-bottom: 8px;
+  }
+
+  /* --- INPUT WRAPPER CONTAINER (FLOATING CAPSULE) --- */
+  .input-wrapper-container {
+    display: flex;
+    align-items: center;
+    background-color: #f1f3f5; /* Background abu-abu halus */
+    border-radius: 24px; /* Membuat bentuk kapsul */
+    padding: 4px 6px 4px 16px;
+    width: 100%;
+    max-width: 800px; /* Batas lebar agar konsisten dengan bubble chat */
+    margin: 0 auto;
+    border: 1px solid transparent;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Efek ketika input sedang aktif/fokus */
+  .input-wrapper-container:focus-within {
+    background-color: #ffffff;
+    border-color: rgba(0, 0, 0, 0.12);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03); /* Soft shadow tipis saat mengetik */
+  }
+
+  /* --- CUSTOM ION INPUT --- */
+  .minimalist-input-field {
+    --padding-start: 0px !important;
+    --padding-end: 8px !important;
+    --padding-top: 10px !important;
+    --padding-bottom: 10px !important;
+    font-size: 0.95rem;
+    color: #1a202c;
+    --placeholder-color: #718096;
+    --placeholder-opacity: 0.7;
+    margin: 0;
+  }
+
+  /* --- MINIMALIST CIRCULAR SEND BUTTON --- */
+  .minimalist-send-btn {
+    --color: #ffffff; /* Ikon putih */
+    --background: #1a202c; /* Background hitam gelap */
+    --background-hover: #2d3748;
+    --background-activated: #000000;
+    --border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    margin: 0;
+    transition: all 0.2s ease-in-out;
+  }
+
+  /* Mengganti ikon send standard dengan 'arrow-up' yang lebih estetik ala ChatGPT/iOS */
+  .minimalist-send-btn ion-icon {
+    font-size: 18px;
+    font-weight: bold;
+  }
+
+
+  /* --- DARK MODE ADJUSTMENTS --- */
+  @media (prefers-color-scheme: dark) {
+    .minimalist-footer {
+      --background: #121212;
+      background: #121212;
+    }
+
+    .input-wrapper-container {
+      background-color: #1e1e1e; /* Senada dengan bubble chat AI */
+    }
+
+    .input-wrapper-container:focus-within {
+      background-color: #1a1a1a;
+      border-color: rgba(255, 255, 255, 0.1);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .minimalist-input-field {
+      color: #f7fafc;
+      --placeholder-color: #718096;
+    }
+
+    .minimalist-send-btn {
+      --color: #121212; /* Ikon gelap */
+      --background: #f7fafc; /* Tombol putih terang agar kontras */
+      --background-hover: #e2e8f0;
+      --background-activated: #ffffff;
+    }
+  }
+</style>
