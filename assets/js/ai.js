@@ -10,7 +10,7 @@
   let currentAudioPlayer = null; // Memegang instance Audio yang sedang menyala
   let activeAudioBtn = null;     // Memegang tombol ikon aktif agar bisa diganti ikonnya ke "pause"
   
-  // STATE BARU: Playlist Murottal Kontinu
+  // STATE: Playlist Murottal Kontinu
   let isContinuousPlaying = false; 
   let currentSurahVerses = [];    // Menyimpan daftar ayat yang sedang dibuka [{ nomorAyat, audioUrl }]
   let currentPlayingIndex = -1;   // Index ayat yang sedang berjalan di dalam playlist
@@ -35,10 +35,13 @@
   let quranReadingView;
   let quranSurahGrid;
   let quranVersesContainer;
+  let quranModalFooter;
 
-  // DOM Al-Quran Continuous Player Controls
+  // DOM Al-Quran Continuous Player Controls (Footer)
   let quranPlayAllBtn;
   let quranStopBtn;
+  let quranPrevBtn;
+  let quranNextBtn;
   let playerCurrentAyahText;
   let playAllIcon;
 
@@ -566,7 +569,7 @@
 
 
   // ========================================================
-  // LOGIKA UTAMA: INTERFACE BUKU AL-QURAN DIGITAL & PLAYLIST MUROTTAL
+  // LOGIKA AL-QURAN DIGITAL & PLAYLIST MUROTTAL KONTINU
   // ========================================================
 
   // Memuat daftar 114 Surah bergaya katalog kartu buku dari API equran.id v2
@@ -646,6 +649,9 @@
     quranReadingView.style.display = 'block';
     quranBackBtn.style.display = 'block';
     closeQuranBtn.style.display = 'none';
+    
+    // Tampilkan mini player footer khusus saat di quran-reading-view
+    quranModalFooter.style.display = 'block';
 
     quranModalTitle.innerText = `Surah ${surahName}`;
     loadedSurahNumber = surahNumber;
@@ -661,6 +667,9 @@
     quranReadingView.style.display = 'none';
     quranBackBtn.style.display = 'none';
     closeQuranBtn.style.display = 'block';
+    
+    // Sembunyikan kembali mini player footer
+    quranModalFooter.style.display = 'none';
 
     quranModalTitle.innerText = 'Al-Quran Digital';
     loadedSurahNumber = null;
@@ -674,7 +683,6 @@
         <p style="margin-top: 12px; color: #718096;">Memuat lantunan ayat suci...</p>
       </div>`;
 
-    // RESET PLAYLIST AYAT
     currentSurahVerses = [];
 
     // STRATEGI PERTAMA: Mengambil data dari API equran.id
@@ -690,7 +698,6 @@
       }
 
       if (verses && verses.length > 0) {
-        // Simpan ke playlist global
         verses.forEach(v => {
           const audioUrl = v.audio ? (v.audio['01'] || v.audio['02'] || Object.values(v.audio)[0] || '') : '';
           currentSurahVerses.push({
@@ -810,7 +817,6 @@
         const audioSrc = btnEl.getAttribute('data-audio-src');
         const ayahNum = parseInt(btnEl.getAttribute('data-ayah-num'));
         
-        // SINKRONISASI: Jika pengguna memutar ayat secara individual, kita hubungkan ke sistem pemutar kontinu
         handleIndividualAyahPlay(audioSrc, ayahNum, btnEl);
       });
     });
@@ -818,14 +824,14 @@
 
 
   // ========================================================
-  // ENGINE LOGIC: PLAYLIST OTOMATIS BERURUTAN (CONTINUOUS PLAYER)
+  // ENGINE LOGIC: PLAYLIST OTOMATIS BERURUTAN (FOOTER SYSTEM)
   // ========================================================
 
   // Aktifkan visual panel kontrol pemutar otomatis begitu data surah selesai diunduh
   function enableContinuousPlayerControls() {
     quranPlayAllBtn.style.display = 'block';
-    playAllIcon.setAttribute('name', 'play-circle-outline');
-    playerCurrentAyahText.innerText = 'Ketuk tombol putar untuk melantunkan surah penuh secara kontinu';
+    playAllIcon.setAttribute('name', 'play-outline');
+    playerCurrentAyahText.innerText = 'Ketuk tombol putar untuk mendengarkan surah secara kontinu';
   }
 
   // Reset total status audio playlist ketika pindah surah atau menutup modal
@@ -838,10 +844,11 @@
     currentPlayingIndex = -1;
     activeAudioBtn = null;
 
-    // Reset visual
-    quranPlayAllBtn.style.display = 'none';
+    // Reset visual player
+    quranPlayAllBtn.style.display = 'block';
+    quranPlayAllBtn.className = 'mini-control-btn play-main-btn'; // kembalikan warna biru
     quranStopBtn.style.display = 'none';
-    playAllIcon.setAttribute('name', 'play-circle-outline');
+    playAllIcon.setAttribute('name', 'play-outline');
     playerCurrentAyahText.innerText = 'Putar satu surah penuh dari ayat ke ayat secara kontinu';
 
     // Hapus sisa highlight di kartu ayat
@@ -855,21 +862,20 @@
     if (currentSurahVerses.length === 0) return;
 
     if (isContinuousPlaying) {
-      // SkenARIO PAUSE
+      // JEDA (PAUSE)
       if (currentAudioPlayer && !currentAudioPlayer.paused) {
         currentAudioPlayer.pause();
-        playAllIcon.setAttribute('name', 'play-circle-outline');
-        playerCurrentAyahText.innerText = `Menjeda murottal pada Ayat ${currentPlayingIndex + 1}`;
+        playAllIcon.setAttribute('name', 'play-outline');
+        playerCurrentAyahText.innerText = `Murottal Ayat ${currentPlayingIndex + 1} sedang dijeda`;
         
-        // Sinkronkan tombol individual di dalam ayat yang sedang berjalan
         const activeCardBtn = document.querySelector(`#ayah-${currentPlayingIndex + 1} .audio-play-btn`);
         if (activeCardBtn) {
           activeCardBtn.innerHTML = `<ion-icon name="play-outline"></ion-icon> Putar Murottal`;
         }
       } else if (currentAudioPlayer && currentAudioPlayer.paused) {
-        // SkenARIO RESUME
+        // LANJUT (RESUME)
         currentAudioPlayer.play().catch(e => console.error("Gagal melanjutkan audio:", e));
-        playAllIcon.setAttribute('name', 'pause-circle-outline');
+        playAllIcon.setAttribute('name', 'pause-outline');
         playerCurrentAyahText.innerText = `Melantunkan Ayat ${currentPlayingIndex + 1}...`;
         
         const activeCardBtn = document.querySelector(`#ayah-${currentPlayingIndex + 1} .audio-play-btn`);
@@ -878,11 +884,14 @@
         }
       }
     } else {
-      // SkenARIO START FRESH: Mulai pemutaran perdana dari index pertama (Ayat 1)
+      // MULAI BARU (START)
       isContinuousPlaying = true;
       currentPlayingIndex = 0;
+      
+      // Mengubah tombol Play biru menjadi Pause merah/bersanding dengan tombol stop
       quranStopBtn.style.display = 'block';
-      playAllIcon.setAttribute('name', 'pause-circle-outline');
+      playAllIcon.setAttribute('name', 'pause-outline');
+      
       playContinuousAyatByIndex(currentPlayingIndex);
     }
   }
@@ -890,7 +899,7 @@
   // Memutar audio ayat berdasarkan nomor indeks playlist
   function playContinuousAyatByIndex(index) {
     if (index < 0 || index >= currentSurahVerses.length) {
-      // Playlist Selesai diputar penuh
+      // Selesai seluruh ayat dalam surah
       resetContinuousPlayerState();
       showAlert("Selesai Membaca", "Lantunan ayat suci satu surah penuh telah selesai dikumandangkan.");
       return;
@@ -902,36 +911,32 @@
     const audioUrl = ayahItem.audioUrl;
 
     if (!audioUrl) {
-      // Jika ayat tidak punya audio (fail-safe), langsung lompat ke ayat selanjutnya
+      // Lompat otomatis jika data audio link kosong
       playContinuousAyatByIndex(index + 1);
       return;
     }
 
-    // Bersihkan highlight lama
+    // Berikan efek highlight visual ke ayat
     document.querySelectorAll('.ayah-card').forEach(card => {
       card.classList.remove('active-playing-ayah');
     });
 
-    // Tandai Ayat Aktif Baru
     const activeCard = document.getElementById(`ayah-${ayahNum}`);
     if (activeCard) {
       activeCard.classList.add('active-playing-ayah');
-      
-      // AUTO-SCROLL: Layar otomatis menggulung agar ayat aktif berada di tengah fokus pandangan pembaca
       activeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
-    // Ubah Teks Info Player di Atas Header Ayat
-    playerCurrentAyahText.innerText = `Sedang melantunkan Ayat ${ayahNum}...`;
+    // Perbarui Teks Status di Footer Player
+    playerCurrentAyahText.innerText = `Melantunkan Ayat ${ayahNum}...`;
 
     if (currentAudioPlayer) {
       currentAudioPlayer.pause();
     }
 
-    // Mainkan Audio baru
     currentAudioPlayer = new Audio(audioUrl);
     
-    // Sinkronisasikan tombol kecil per ayat
+    // Sinkronisasikan tombol individual
     const currentCardBtn = activeCard ? activeCard.querySelector('.audio-play-btn') : null;
     if (currentCardBtn) {
       currentCardBtn.innerHTML = `<ion-icon name="pause-outline"></ion-icon> Jeda`;
@@ -940,13 +945,13 @@
 
     currentAudioPlayer.play().catch(err => {
       console.error("Gagal melantunkan murottal:", err);
-      // Fail-safe: jika file audio rusak/error, langsung beralih ke ayat berikutnya dalam 1 detik
+      // Auto-skip jika berkas bermasalah
       setTimeout(() => {
         playContinuousAyatByIndex(index + 1);
       }, 1000);
     });
 
-    // AUTO-NEXT: Begitu audio ayat ini usai, sistem otomatis memutar ayat berikutnya
+    // Otomatis putar ayat selanjutnya
     currentAudioPlayer.onended = () => {
       if (currentCardBtn) {
         currentCardBtn.innerHTML = `<ion-icon name="play-outline"></ion-icon> Putar Murottal`;
@@ -955,23 +960,55 @@
     };
   }
 
-  // Sinkronisasi Interaktif: Pengguna mengklik tombol putar per ayat saat playlist kontinu sedang berjalan
-  function handleIndividualAyahPlay(audioUrl, ayahNum, buttonElement) {
-    const iconEl = buttonElement.querySelector('ion-icon');
-    const index = ayahNum - 1; // Konversi nomor ayat menjadi indeks playlist 0-based
+  // Melompat ke Ayat Berikutnya (FORWARD)
+  function playNextAyah() {
+    if (currentSurahVerses.length === 0) return;
+    
+    if (!isContinuousPlaying) {
+      // Jika player belum nyala, mulai dari ayat pertama
+      isContinuousPlaying = true;
+      currentPlayingIndex = 0;
+      quranStopBtn.style.display = 'block';
+      playAllIcon.setAttribute('name', 'pause-outline');
+      playContinuousAyatByIndex(currentPlayingIndex);
+    } else {
+      // Jika sedang berjalan, maju +1
+      const nextIdx = currentPlayingIndex + 1;
+      if (nextIdx < currentSurahVerses.length) {
+        playContinuousAyatByIndex(nextIdx);
+      } else {
+        showAlert("Ujung Surah", "Ini adalah ayat terakhir dari surah yang sedang dibaca.");
+      }
+    }
+  }
 
-    // Kasus 1: Klik jeda pada ayat yang sedang diputar di playlist kontinu
+  // Melompat ke Ayat Sebelumnya (BACKWARD)
+  function playPrevAyah() {
+    if (currentSurahVerses.length === 0) return;
+
+    if (isContinuousPlaying) {
+      const prevIdx = currentPlayingIndex - 1;
+      if (prevIdx >= 0) {
+        playContinuousAyatByIndex(prevIdx);
+      } else {
+        showAlert("Awal Surah", "Ini sudah berada pada ayat pertama dari surah.");
+      }
+    }
+  }
+
+  // Sinkronisasi tombol putar individual di samping teks ayat
+  function handleIndividualAyahPlay(audioUrl, ayahNum, buttonElement) {
+    const index = ayahNum - 1;
+
     if (isContinuousPlaying && currentPlayingIndex === index) {
-      toggleContinuousPlay(); // Alihkan status jeda global
+      toggleContinuousPlay();
       return;
     }
 
-    // Kasus 2: Putar ayat lain secara individual
-    // Kita arahkan playlist kontinu untuk melompat langsung ke ayat baru pilihan pengguna tersebut
     isContinuousPlaying = true;
     currentPlayingIndex = index;
     quranStopBtn.style.display = 'block';
-    playAllIcon.setAttribute('name', 'pause-circle-outline');
+    playAllIcon.setAttribute('name', 'pause-outline');
     playContinuousAyatByIndex(index);
   }
 
@@ -986,7 +1023,7 @@
     scrollTopFab = document.getElementById('scroll-top-fab');
     chatTitleEl = document.getElementById('chat-title');
 
-    // DOM References Al-Quran (View Model Baru)
+    // DOM References Al-Quran
     quranModal = document.getElementById('quran-modal');
     closeQuranBtn = document.getElementById('close-quran-btn');
     quranBackBtn = document.getElementById('quran-back-btn');
@@ -995,10 +1032,13 @@
     quranReadingView = document.getElementById('quran-reading-view');
     quranSurahGrid = document.getElementById('quran-surah-grid');
     quranVersesContainer = document.getElementById('quran-verses-container');
+    quranModalFooter = document.getElementById('quran-modal-footer');
 
-    // DOM Continuous Player Controls
+    // DOM Continuous Player Controls (Footer)
     quranPlayAllBtn = document.getElementById('quran-play-all-btn');
     quranStopBtn = document.getElementById('quran-stop-btn');
+    quranPrevBtn = document.getElementById('quran-prev-btn');
+    quranNextBtn = document.getElementById('quran-next-btn');
     playerCurrentAyahText = document.getElementById('player-current-ayah');
     playAllIcon = document.getElementById('play-all-icon');
 
@@ -1033,14 +1073,22 @@
       closeSurahReadingView();
     });
 
-    // Event listeners Playlist Kontinu Al-Quran
+    // Event listeners Footer Playlist Kontinu Al-Quran
     quranPlayAllBtn?.addEventListener('click', () => {
       toggleContinuousPlay();
     });
 
     quranStopBtn?.addEventListener('click', () => {
       resetContinuousPlayerState();
-      enableContinuousPlayerControls(); // Kembalikan ke opsi putar
+      enableContinuousPlayerControls();
+    });
+
+    quranNextBtn?.addEventListener('click', () => {
+      playNextAyah();
+    });
+
+    quranPrevBtn?.addEventListener('click', () => {
+      playPrevAyah();
     });
 
     // Ambil katalog 114 surah berformat kartu buku saat halaman siap
@@ -1091,7 +1139,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (aktivasiEl) aktivasiEl.textContent = second;
         if (second <= 0) {
             clearInterval(lockInterval);
-            window.location.href = "https://mia-miaaw.github.io/blog/";
+            window.location.href = "https://vildaesa.github.io/blog/";
         }
     }, 1000);
 });
