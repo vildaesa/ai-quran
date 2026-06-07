@@ -27,6 +27,7 @@
       const alert = document.createElement('ion-alert');
       alert.header = header;
       alert.message = message;
+      alert.cssClass = 'minimalist-alert'; // Hook untuk custom styling jika diperlukan
       alert.buttons = [
         {
           text: 'Batal',
@@ -76,7 +77,7 @@
       const defaultId = generateId();
       conversations = [{
         id: defaultId,
-        title: 'Percakapan',
+        title: 'Percakapan Baru',
         messages: []
       }];
       currentConversationId = defaultId;
@@ -89,7 +90,7 @@
       currentConversationId = data.currentConversationId || (conversations[0]?.id || null);
       if (!conversations.length) {
         const newId = generateId();
-        conversations = [{ id: newId, title: 'Percakapan', messages: [] }];
+        conversations = [{ id: newId, title: 'Percakapan Baru', messages: [] }];
         currentConversationId = newId;
         saveToLocalStorage();
       } else if (currentConversationId && !conversations.find(c => c.id === currentConversationId)) {
@@ -98,7 +99,7 @@
     } catch(e) {
       console.warn(e);
       const defaultId = generateId();
-      conversations = [{ id: defaultId, title: 'Percakapan', messages: [] }];
+      conversations = [{ id: defaultId, title: 'Percakapan Baru', messages: [] }];
       currentConversationId = defaultId;
     }
   }
@@ -109,11 +110,11 @@
     if (!conv) return;
     const firstUserMsg = conv.messages.find(m => m.sender === 'user');
     if (firstUserMsg && firstUserMsg.text) {
-      let newTitle = firstUserMsg.text.length > 30 ? firstUserMsg.text.substring(0, 27) + '...' : firstUserMsg.text;
-      if (newTitle.trim() === '') newTitle = 'Percakapan';
+      let newTitle = firstUserMsg.text.length > 20 ? firstUserMsg.text.substring(0, 18) + '...' : firstUserMsg.text;
+      if (newTitle.trim() === '') newTitle = 'Percakapan Baru';
       conv.title = newTitle;
     } else {
-      conv.title = 'Percakapan';
+      conv.title = 'Percakapan Baru';
     }
     saveToLocalStorage();
     renderSidebar();
@@ -126,37 +127,42 @@
   function renderSidebar() {
     if (!conversationListEl) return;
     if (conversations.length === 0) {
-      conversationListEl.innerHTML = `<ion-item lines="none" class="ion-text-center"><ion-label color="medium">Tidak ada percakapan</ion-label></ion-item>`;
+      conversationListEl.innerHTML = `
+        <div class="menu-loading-container">
+          <p style="color: #a0aec0;">Tidak ada percakapan</p>
+        </div>`;
       return;
     }
     let html = '';
     conversations.forEach(conv => {
       const isActive = (currentConversationId === conv.id);
       const activeClass = isActive ? 'active' : '';
-      // title aman
       const titleEscaped = escapeHtml(conv.title);
+      const messageCount = conv.messages.length;
+      
       html += `
-        <ion-item class="conversation-item ${activeClass}" data-conv-id="${conv.id}" button detail="false">
-          <ion-label class="ion-text-wrap">
-            <h3>${titleEscaped}</h3>
-            <p style="font-size: 12px; color: gray;">${conv.messages.length} pesan</p>
+        <ion-item class="history-item ${activeClass}" data-conv-id="${conv.id}" button detail="false">
+          <ion-icon name="chatbubble-outline" slot="start" class="history-icon"></ion-icon>
+          <ion-label class="history-label">
+            <h2>${titleEscaped}</h2>
+            <p>${messageCount} pesan</p>
           </ion-label>
           <ion-buttons slot="end">
-            <ion-button class="delete-conv-btn" fill="clear" color="danger" data-conv-delete="${conv.id}">
-              <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+            <ion-button class="delete-conv-btn minimalist-btn-danger" fill="clear" data-conv-delete="${conv.id}">
+              <ion-icon slot="icon-only" name="trash-outline" style="font-size: 16px;"></ion-icon>
             </ion-button>
           </ion-buttons>
         </ion-item>
       `;
     });
     conversationListEl.innerHTML = html;
-    
-    // event listeners untuk item & tombol delete
-    document.querySelectorAll('.conversation-item').forEach(item => {
+
+    // Event listener untuk peralihan chat
+    document.querySelectorAll('.history-item').forEach(item => {
       const convId = item.getAttribute('data-conv-id');
       if (convId && !item.getAttribute('data-listener-attached')) {
         item.addEventListener('click', (e) => {
-          // cegah jika klik tombol delete
+          // Cegah jika menekan tombol hapus (trash)
           if (e.target.closest('.delete-conv-btn')) return;
           if (convId !== currentConversationId) {
             switchConversation(convId);
@@ -165,13 +171,14 @@
         item.setAttribute('data-listener-attached', 'true');
       }
     });
-    
+
+    // Event listener untuk tombol hapus riwayat
     document.querySelectorAll('.delete-conv-btn').forEach(btn => {
       btn.removeEventListener('click', handleDeleteClick);
       btn.addEventListener('click', handleDeleteClick);
     });
   }
-  
+
   function handleDeleteClick(e) {
     e.stopPropagation();
     const btn = e.currentTarget;
@@ -180,20 +187,19 @@
       deleteConversation(convId);
     }
   }
-  
+
   async function deleteConversation(convId) {
     const convToDelete = conversations.find(c => c.id === convId);
     if (!convToDelete) return;
     const confirmed = await confirmDialog('Hapus Percakapan', `Apakah Anda yakin ingin menghapus "${convToDelete.title}"?`);
     if (!confirmed) return;
-    
+
     const index = conversations.findIndex(c => c.id === convId);
     if (index !== -1) conversations.splice(index, 1);
-    
+
     if (conversations.length === 0) {
-      // create new one
       const newId = generateId();
-      conversations.push({ id: newId, title: 'Percakapan', messages: [] });
+      conversations.push({ id: newId, title: 'Percakapan Baru', messages: [] });
       currentConversationId = newId;
     } else if (currentConversationId === convId) {
       currentConversationId = conversations[0].id;
@@ -201,12 +207,12 @@
     saveToLocalStorage();
     renderSidebar();
     renderCurrentChat();
-    // update header title
+    
     const currentConv = conversations.find(c => c.id === currentConversationId);
     if (currentConv) chatTitleEl.innerText = currentConv.title;
     else chatTitleEl.innerText = 'AI Chat';
   }
-  
+
   function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/[&<>]/g, function(m) {
@@ -216,11 +222,11 @@
       return m;
     });
   }
-  
+
   // Update HANYA konten bubble AI tanpa re-render seluruh DOM (smooth streaming)
   function updateAIBubbleOnly(fullText) {
     if (!aiMessageElement) return;
-    const bubble = aiMessageElement.querySelector('.bubble');
+    const bubble = aiMessageElement.querySelector('.message-bubble');
     if (bubble) {
       if (window.marked) {
         bubble.innerHTML = marked.parse(fullText);
@@ -230,37 +236,41 @@
       scrollToBottom();
     }
   }
-  
+
   // ---------- RENDER CHAT (messages dan typing indicator) ----------
   function renderCurrentChat() {
     if (!messagesContainer) return;
     const currentConv = conversations.find(c => c.id === currentConversationId);
     if (!currentConv) return;
-    
+
     messagesContainer.innerHTML = '';
     const messages = currentConv.messages;
+
+    // Perbaikan Logika Welcome Screen: Hanya tampil jika kosong total
     if (messages.length === 0) {
       emptyPlaceholder.style.display = 'flex';
     } else {
       emptyPlaceholder.style.display = 'none';
       messages.forEach(msg => {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `message ${msg.sender}`;
-        const bubbleDiv = document.createElement('div');
-        bubbleDiv.className = 'bubble';
+        const wrapperDiv = document.createElement('div');
+        wrapperDiv.className = `message-wrapper ${msg.sender}`;
         
-        // Render Markdown if AI, else plain text
+        const bubbleDiv = document.createElement('div');
+        bubbleDiv.className = 'message-bubble';
+
+        // Render Markdown jika AI, selain itu teks biasa
         if (msg.sender === 'ai' && window.marked) {
           bubbleDiv.innerHTML = marked.parse(msg.text);
         } else {
           bubbleDiv.innerText = msg.text;
         }
-        
-        messageDiv.appendChild(bubbleDiv);
-        messagesContainer.appendChild(messageDiv);
+
+        wrapperDiv.appendChild(bubbleDiv);
+        messagesContainer.appendChild(wrapperDiv);
       });
     }
-    // jika sedang menampilkan typing indicator, kita harus menambahkannya kembali
+
+    // Mengontrol penayangan typing indicator meluncur dinamis
     if (isWaitingResponse) {
       showTypingIndicatorOnly();
     } else {
@@ -268,22 +278,35 @@
     }
     scrollToBottom();
   }
-  
+
+  // Menampilkan typing indicator berbentuk pil minimalis modern
   function showTypingIndicatorOnly() {
-    removeTypingIndicator(); // hapus jika ada
-    const typingDiv = document.createElement('div');
-    typingDiv.className = 'typing-indicator';
-    typingDiv.id = 'live-typing-indicator';
-    for (let i = 0; i < 3; i++) {
-      const dot = document.createElement('div');
-      dot.className = 'typing-dot';
-      typingDiv.appendChild(dot);
+    removeTypingIndicator();
+    
+    // Menyembunyikan welcome screen jika sedang mengetik pesan pertama
+    if (emptyPlaceholder) {
+      emptyPlaceholder.style.display = 'none';
     }
+
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'typing-indicator-container';
+    typingDiv.id = 'live-typing-indicator';
+    
+    const bubbleDiv = document.createElement('div');
+    bubbleDiv.className = 'typing-bubble';
+
+    for (let i = 0; i < 3; i++) {
+      const dot = document.createElement('span');
+      dot.className = 'typing-dot';
+      bubbleDiv.appendChild(dot);
+    }
+    
+    typingDiv.appendChild(bubbleDiv);
     messagesContainer.appendChild(typingDiv);
     scrollToBottom();
     currentTypingIndicatorElement = typingDiv;
   }
-  
+
   function removeTypingIndicator() {
     if (currentTypingIndicatorElement && currentTypingIndicatorElement.parentNode) {
       currentTypingIndicatorElement.remove();
@@ -292,8 +315,8 @@
     const existing = document.getElementById('live-typing-indicator');
     if (existing) existing.remove();
   }
-  
-  // fungsi menambahkan pesan baru ke percakapan aktif
+
+  // Fungsi menambahkan pesan baru ke percakapan aktif
   function addMessageToCurrent(sender, text) {
     const conv = conversations.find(c => c.id === currentConversationId);
     if (!conv) return false;
@@ -304,7 +327,13 @@
       timestamp: Date.now()
     };
     conv.messages.push(newMsg);
-    // update title jika pesan pertama dari user
+    
+    // Sembunyikan placeholder welcome screen saat pesan pertama dikirim
+    if (emptyPlaceholder) {
+      emptyPlaceholder.style.display = 'none';
+    }
+
+    // Update title jika pesan pertama dari user
     if (sender === 'user' && conv.messages.filter(m => m.sender === 'user').length === 1) {
       updateConversationTitle(currentConversationId);
     }
@@ -312,7 +341,7 @@
     renderCurrentChat();
     return true;
   }
-  
+
   // API Configuration
   const API_BASE_URL = 'https://ai-quran-backend.vildaesa.workers.dev';
 
@@ -339,7 +368,7 @@
 
       if (!response.ok) throw new Error('Gagal koneksi server.');
 
-      // Hapus indikator SEBELUM mulai stream dan rendering bubble AI
+      // Hapus indikator sebelum mulai rendering stream bubble AI
       removeTypingIndicator();
 
       // Buat pesan AI kosong
@@ -350,16 +379,16 @@
         timestamp: Date.now()
       };
       currentConv.messages.push(aiMsg);
-      
-      // Buat bubble AI element sekali saja (tidak akan di-re-render selama streaming)
-      const messageDiv = document.createElement('div');
-      messageDiv.className = 'message ai';
+
+      // Desain bubble wrapper baru disesuaikan dengan template CSS kita
+      const wrapperDiv = document.createElement('div');
+      wrapperDiv.className = 'message-wrapper ai';
       const bubbleDiv = document.createElement('div');
-      bubbleDiv.className = 'bubble';
-      messageDiv.appendChild(bubbleDiv);
-      messagesContainer.appendChild(messageDiv);
-      aiMessageElement = messageDiv; // Simpan referensi
-      
+      bubbleDiv.className = 'message-bubble';
+      wrapperDiv.appendChild(bubbleDiv);
+      messagesContainer.appendChild(wrapperDiv);
+      aiMessageElement = wrapperDiv; // Simpan referensi penargetan streaming
+
       scrollToBottom();
 
       const reader = response.body.getReader();
@@ -373,12 +402,12 @@
 
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
-        buffer = lines.pop() || ''; // Simpan sisa baris yang belum lengkap ke buffer
+        buffer = lines.pop() || '';
 
         for (const line of lines) {
           const trimmedLine = line.trim();
           if (!trimmedLine || !trimmedLine.startsWith('data: ')) continue;
-          
+
           const dataStr = trimmedLine.substring(6);
           if (dataStr === '[DONE]') break;
 
@@ -387,15 +416,13 @@
             if (parsed.response) {
               aiFullText += parsed.response;
               aiMsg.text = aiFullText;
-              
-              // Update hanya bubble AI, JANGAN re-render seluruh DOM (smooth no blinking!)
               updateAIBubbleOnly(aiFullText);
             }
           } catch (e) { }
         }
       }
 
-      // PROSES SISA BUFFER (PENTING: supaya tidak terpotong di akhir)
+      // Sisa Buffer terakhir
       if (buffer.trim().startsWith('data: ')) {
         const dataStr = buffer.trim().substring(6);
         if (dataStr !== '[DONE]') {
@@ -411,46 +438,43 @@
       }
 
       saveToLocalStorage();
-      aiMessageElement = null; // Clear referensi setelah selesai
+      aiMessageElement = null;
     } catch (error) {
       console.error('Error:', error);
       removeTypingIndicator();
-      addMessageToCurrent('ai', 'Maaf Bro, koneksi terputus. Pastikan backend sudah jalan ya!');
+      addMessageToCurrent('ai', 'Maaf Bro, ada gangguan koneksi dengan asisten AI. Silakan periksa jaringanmu dan coba kembali.');
       aiMessageElement = null;
     } finally {
       isWaitingResponse = false;
-      removeTypingIndicator(); // Double check
+      removeTypingIndicator();
     }
   }
 
   // Kirim pesan user
   async function sendUserMessage() {
     if (isWaitingResponse) {
-      await showAlert('Tunggu sebentar', 'AI sedang mengetik... harap tunggu balasan selesai.');
+      await showAlert('Tunggu Sebentar', 'Asisten AI sedang menyusun tanggapan... mohon tunggu sesaat.');
       return;
     }
     let rawText = messageInput.value?.trim();
     if (!rawText) {
-      await showAlert('Pesan kosong', 'Silakan ketik pesan terlebih dahulu.');
-      return;
+      return; // Kembalikan tanpa alert kosong yang berisik
     }
-    // Tambahkan pesan user
     addMessageToCurrent('user', rawText);
     messageInput.value = '';
-    // Panggil AI response asli
     await getAIResponse(rawText);
   }
-  
+
   // New chat
   function createNewChat() {
     if (isWaitingResponse) {
-      showAlert('Tunggu', 'Tunggu hingga AI selesai merespon.');
+      showAlert('Tunggu', 'Selesaikan percakapan saat ini sebelum memulai baru.');
       return;
     }
     const newId = generateId();
     const newConv = {
       id: newId,
-      title: 'Percakapan',
+      title: 'Percakapan Baru',
       messages: []
     };
     conversations.unshift(newConv);
@@ -458,14 +482,14 @@
     saveToLocalStorage();
     renderSidebar();
     renderCurrentChat();
-    chatTitleEl.innerText = 'Percakapan';
+    chatTitleEl.innerText = 'Percakapan Baru';
     scrollToBottom();
   }
-  
+
   // Switch conversation
   function switchConversation(convId) {
     if (isWaitingResponse) {
-      showAlert('Tunggu', 'Selesaikan pesan terlebih dahulu sebelum beralih riwayat.');
+      showAlert('Tunggu', 'Harap tunggu hingga asisten selesai merespon chat saat ini.');
       return;
     }
     const conv = conversations.find(c => c.id === convId);
@@ -476,38 +500,35 @@
     renderCurrentChat();
     const activeConv = conversations.find(c => c.id === convId);
     chatTitleEl.innerText = activeConv ? activeConv.title : 'AI Chat';
-    // kosongkan input
     messageInput.value = '';
-    aiMessageElement = null; // Clear referensi
+    aiMessageElement = null;
   }
-  
-  // Clear all messages in current conversation (dengan konfirmasi)
+
+  // Clear all messages in current conversation
   async function clearCurrentChat() {
     if (isWaitingResponse) {
-      showAlert('Tunggu', 'AI sedang merespon, coba lagi nanti.');
+      showAlert('Tunggu', 'Asisten sedang memproses tanggapan, tidak bisa mengosongkan riwayat sekarang.');
       return;
     }
     const conv = conversations.find(c => c.id === currentConversationId);
     if (!conv) return;
     if (conv.messages.length === 0) {
-      showAlert('Info', 'Percakapan sudah kosong.');
+      showAlert('Info', 'Kotak obrolan ini sudah bersih.');
       return;
     }
-    const confirmed = await confirmDialog('Hapus semua pesan', `Hapus seluruh riwayat chat di "${conv.title}"?`);
+    const confirmed = await confirmDialog('Bersihkan Obrolan', `Hapus seluruh pesan yang ada pada "${conv.title}"?`);
     if (confirmed) {
       conv.messages = [];
       saveToLocalStorage();
       renderCurrentChat();
-      // Update title menjadi default jika kosong
       updateConversationTitle(currentConversationId);
       chatTitleEl.innerText = conv.title;
-      aiMessageElement = null; // Clear referensi
+      aiMessageElement = null;
     }
   }
-  
+
   // SCROLL helpers
   async function scrollToBottom() {
-    // Tunggu render
     await new Promise(r => setTimeout(r, 50));
     const contentEl = document.querySelector('#chat-content');
     if (contentEl && contentEl.getScrollElement) {
@@ -517,7 +538,7 @@
       }
     }
   }
-  
+
   async function scrollToTop() {
     const contentEl = document.querySelector('#chat-content');
     if (contentEl && contentEl.getScrollElement) {
@@ -527,8 +548,8 @@
       }
     }
   }
-  
-  // Show/hide scroll-to-top FAB based on scroll position
+
+  // Show/hide scroll-to-top FAB
   function initScrollListener() {
     const chatContent = document.querySelector('#chat-content');
     if (!chatContent) return;
@@ -541,7 +562,7 @@
       }
     });
   }
-  
+
   // ---------- INITIALIZE APP ----------
   function init() {
     loadFromLocalStorage();
@@ -552,13 +573,12 @@
     sendBtn = document.getElementById('send-message-btn');
     scrollTopFab = document.getElementById('scroll-top-fab');
     chatTitleEl = document.getElementById('chat-title');
-    
-    // Render awal
+
     renderSidebar();
     renderCurrentChat();
     const curConv = conversations.find(c => c.id === currentConversationId);
     if (curConv) chatTitleEl.innerText = curConv.title;
-    
+
     // Event listeners
     sendBtn.addEventListener('click', () => sendUserMessage());
     messageInput.addEventListener('keypress', (e) => {
@@ -567,23 +587,24 @@
         sendUserMessage();
       }
     });
+    
     document.getElementById('new-chat-btn')?.addEventListener('click', () => createNewChat());
     document.getElementById('clear-current-chat-btn')?.addEventListener('click', () => clearCurrentChat());
     document.getElementById('scroll-top-btn')?.addEventListener('click', () => scrollToTop());
-    
+
     initScrollListener();
-    
+
     setTimeout(() => {
       scrollToBottom();
     }, 300);
   }
-  
+
   window.addEventListener('DOMContentLoaded', () => {
     init();
   });
 })();
 
-// Pembatasan Sederhana Lisensi
+// Lisensi Proteksi Template
 document.addEventListener('DOMContentLoaded', function () {
     const dev = 'aHR0cHM6Ly92aWxkYWVzYS5naXRodWIuaW8=';
     const myLicense = atob(dev);
