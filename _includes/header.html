@@ -62,35 +62,35 @@
 
   </ion-content>
 
-  <!-- FOOTER PEMUTAR MUSIK MINIMALIS DI DALAM MODAL (Hanya tampil saat mode membaca) -->
+  <!-- FOOTER PEMUTAR MUSIK MINIMALIS DI DALAM MODAL -->
   <ion-footer id="quran-modal-footer" class="ion-no-border quran-mini-player-footer" style="display: none;">
     <div class="mini-player-container">
       
       <!-- Progress / Info Ayat -->
       <div class="mini-player-info">
-        <span id="player-current-ayah" class="mini-player-subtext">Ketuk tombol putar untuk mendengarkan surah secara kontinu</span>
+        <span id="player-current-ayah" class="mini-player-subtext"></span>
       </div>
 
-      <!-- Tombol Kontrol Musik -->
+      <!-- Tombol Kontrol Musik (Dengan slot="icon-only" yang sudah diperbaiki) -->
       <div class="mini-player-controls">
         <!-- Ke Ayat Sebelumnya -->
         <ion-button fill="clear" id="quran-prev-btn" class="mini-control-btn">
-          <ion-icon name="play-back-outline"></ion-icon>
+          <ion-icon name="play-back-outline" slot="icon-only"></ion-icon>
         </ion-button>
 
         <!-- Play / Pause Utama -->
         <ion-button fill="clear" id="quran-play-all-btn" class="mini-control-btn play-main-btn">
-          <ion-icon name="play-outline" id="play-all-icon"></ion-icon>
+          <ion-icon name="play-outline" id="play-all-icon" slot="icon-only"></ion-icon>
         </ion-button>
 
         <!-- Stop -->
         <ion-button fill="clear" id="quran-stop-btn" class="mini-control-btn stop-main-btn" style="display: none;">
-          <ion-icon name="stop-outline"></ion-icon>
+          <ion-icon name="stop-outline" slot="icon-only"></ion-icon>
         </ion-button>
 
         <!-- Ke Ayat Berikutnya -->
         <ion-button fill="clear" id="quran-next-btn" class="mini-control-btn">
-          <ion-icon name="play-forward-outline"></ion-icon>
+          <ion-icon name="play-forward-outline" slot="icon-only"></ion-icon>
         </ion-button>
       </div>
 
@@ -206,7 +206,7 @@
   }
 
   .quran-verses-wrapper {
-    padding: 24px 20px 100px 20px; /* Ditambah padding bottom agar teks terbawah tidak tertutup footer player */
+    padding: 24px 20px 100px 20px;
     max-width: 680px;
     margin: 0 auto;
   }
