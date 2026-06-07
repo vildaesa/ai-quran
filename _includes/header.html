@@ -53,36 +53,49 @@
       </div>
     </div>
 
-    <!-- VIEW 2: HALAMAN BACAAN AYAT (DENGAN PEMUTAR KONTINU DI ATASNYA) -->
+    <!-- VIEW 2: HALAMAN BACAAN AYAT -->
     <div id="quran-reading-view" class="quran-reading-wrapper" style="display: none;">
-      
-      <!-- PANEL UTAMA: PEMUTAR MUROTTAL OTOMATIS PER SURAH -->
-      <div class="quran-player-bar">
-        <div class="player-info">
-          <div class="player-icon-box">
-            <ion-icon name="musical-notes-outline" class="player-icon"></ion-icon>
-          </div>
-          <div class="player-text">
-            <span class="player-status">Putar Otomatis Surah</span>
-            <span id="player-current-ayah" class="player-subtext">Putar satu surah penuh dari ayat ke ayat secara kontinu</span>
-          </div>
-        </div>
-        <div class="player-controls">
-          <ion-button fill="clear" id="quran-play-all-btn" class="player-btn">
-            <ion-icon name="play-circle-outline" id="play-all-icon"></ion-icon>
-          </ion-button>
-          <ion-button fill="clear" id="quran-stop-btn" class="player-btn" style="display: none;">
-            <ion-icon name="stop-circle-outline"></ion-icon>
-          </ion-button>
-        </div>
-      </div>
-      
       <div id="quran-verses-container" class="quran-verses-wrapper">
         <!-- Ayat suci akan dirender di sini oleh JS -->
       </div>
     </div>
 
   </ion-content>
+
+  <!-- FOOTER PEMUTAR MUSIK MINIMALIS DI DALAM MODAL (Hanya tampil saat mode membaca) -->
+  <ion-footer id="quran-modal-footer" class="ion-no-border quran-mini-player-footer" style="display: none;">
+    <div class="mini-player-container">
+      
+      <!-- Progress / Info Ayat -->
+      <div class="mini-player-info">
+        <span id="player-current-ayah" class="mini-player-subtext">Ketuk tombol putar untuk mendengarkan surah secara kontinu</span>
+      </div>
+
+      <!-- Tombol Kontrol Musik -->
+      <div class="mini-player-controls">
+        <!-- Ke Ayat Sebelumnya -->
+        <ion-button fill="clear" id="quran-prev-btn" class="mini-control-btn">
+          <ion-icon name="play-back-outline"></ion-icon>
+        </ion-button>
+
+        <!-- Play / Pause Utama -->
+        <ion-button fill="clear" id="quran-play-all-btn" class="mini-control-btn play-main-btn">
+          <ion-icon name="play-outline" id="play-all-icon"></ion-icon>
+        </ion-button>
+
+        <!-- Stop -->
+        <ion-button fill="clear" id="quran-stop-btn" class="mini-control-btn stop-main-btn" style="display: none;">
+          <ion-icon name="stop-outline"></ion-icon>
+        </ion-button>
+
+        <!-- Ke Ayat Berikutnya -->
+        <ion-button fill="clear" id="quran-next-btn" class="mini-control-btn">
+          <ion-icon name="play-forward-outline"></ion-icon>
+        </ion-button>
+      </div>
+
+    </div>
+  </ion-footer>
 </ion-modal>
 
 <style>
@@ -193,7 +206,7 @@
   }
 
   .quran-verses-wrapper {
-    padding: 24px 20px;
+    padding: 24px 20px 100px 20px; /* Ditambah padding bottom agar teks terbawah tidak tertutup footer player */
     max-width: 680px;
     margin: 0 auto;
   }
