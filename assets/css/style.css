@@ -1,4 +1,3 @@
-
 :root {
   --sidebar-width: 280px;
 }
@@ -118,17 +117,85 @@ body, ion-app, ion-item, ion-label, ion-title, ion-button, ion-input, ion-textar
 
 
 /* =========================================
-  STYLING DETIL MODAL AL-QURAN
+  STYLING INDEKS BUKU SURAH (NEW!)
+  =========================================
+*/
+.quran-surah-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 16px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.01);
+}
+
+.quran-surah-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(43, 108, 176, 0.3);
+  box-shadow: 0 4px 16px rgba(43, 108, 176, 0.06);
+}
+
+.surah-number-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: rgba(43, 108, 176, 0.06);
+  color: #2b6cb0;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.surah-meta-info {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.surah-meta-info h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1a202c;
+  margin: 0 0 2px 0;
+  letter-spacing: -0.01em;
+}
+
+.surah-meta-info p {
+  font-size: 0.78rem;
+  color: #718096;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.surah-arabic-name {
+  font-family: 'Noto Naskh Arabic', serif;
+  font-size: 1.25rem;
+  color: #2b6cb0;
+  font-weight: 500;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+
+/* =========================================
+  STYLING DETAIL BACAAN AYAT
   =========================================
 */
 .quran-verses-container {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
   padding-bottom: 40px;
 }
 
-/* Satu Blok Ayat */
 .ayah-card {
   padding: 24px 0;
   border-bottom: 1px dashed rgba(0, 0, 0, 0.08);
@@ -144,7 +211,6 @@ body, ion-app, ion-item, ion-label, ion-title, ion-button, ion-input, ion-textar
   align-items: center;
 }
 
-/* Label Nomor Ayat (Kapsul Tipis) */
 .ayah-badge {
   background: rgba(43, 108, 176, 0.08);
   color: #2b6cb0;
@@ -154,7 +220,6 @@ body, ion-app, ion-item, ion-label, ion-title, ion-button, ion-input, ion-textar
   font-weight: 600;
 }
 
-/* Teks Arab Uthmani */
 .ayah-arabic {
   font-family: 'Noto Naskh Arabic', serif;
   font-size: 1.85rem;
@@ -166,7 +231,6 @@ body, ion-app, ion-item, ion-label, ion-title, ion-button, ion-input, ion-textar
   letter-spacing: -0.01em;
 }
 
-/* Terjemahan Kemenag RI */
 .ayah-translation {
   font-size: 0.92rem;
   line-height: 1.55;
@@ -174,7 +238,6 @@ body, ion-app, ion-item, ion-label, ion-title, ion-button, ion-input, ion-textar
   margin: 0;
 }
 
-/* Toolbar Aksi Ayat (Audio Murottal) */
 .ayah-actions {
   display: flex;
   align-items: center;
@@ -200,15 +263,6 @@ body, ion-app, ion-item, ion-label, ion-title, ion-button, ion-input, ion-textar
   margin-inline-end: 6px;
 }
 
-/* --- SPLIT PANE & SIDEBAR --- */
-ion-split-pane {
-  --side-width: var(--sidebar-width);
-  --side-max-width: 320px;
-}
-ion-menu {
-  --width: var(--sidebar-width);
-}
-
 /* --- ANIMASI --- */
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(10px); }
@@ -217,7 +271,6 @@ ion-menu {
 
 /* --- PENYESUAIAN GELAP (DARK THEME) --- */
 @media (prefers-color-scheme: dark) {
-  /* AI */
   .message-wrapper.ai { border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
   .message-wrapper.ai::before { color: #a0aec0; }
   .message-wrapper.ai .message-bubble { color: #e2e8f0 !important; }
@@ -228,11 +281,31 @@ ion-menu {
   .message-wrapper.ai .message-bubble code { background: rgba(255, 255, 255, 0.08); color: #f7fafc; }
   .message-wrapper.ai .message-bubble pre { background: #1a1a1a; border-color: rgba(255, 255, 255, 0.04); }
 
-  /* User */
   .message-wrapper.user::before { color: #4a5568; }
   .message-wrapper.user .message-bubble { background-color: #f7fafc; color: #121212 !important; }
 
   /* Quran Dark Mode */
+  .quran-surah-card {
+    background: #1a1a1a;
+    border-color: rgba(255, 255, 255, 0.05);
+  }
+  .quran-surah-card:hover {
+    border-color: rgba(99, 179, 237, 0.3);
+    box-shadow: 0 4px 16px rgba(99, 179, 237, 0.04);
+  }
+  .surah-number-badge {
+    background-color: rgba(99, 179, 237, 0.12);
+    color: #63b3ed;
+  }
+  .surah-meta-info h4 {
+    color: #f7fafc;
+  }
+  .surah-meta-info p {
+    color: #a0aec0;
+  }
+  .surah-arabic-name {
+    color: #63b3ed;
+  }
   .ayah-card {
     border-bottom: 1px dashed rgba(255, 255, 255, 0.08);
   }
