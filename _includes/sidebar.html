@@ -1,21 +1,221 @@
-<!-- SIDEBAR: Riwayat Chat -->
-<ion-menu side="start" menu-id="chatHistoryMenu" content-id="main-content" swipeGesture="true">
-  <ion-header>
-    <ion-toolbar>
-      <ion-title>Riwayat Chat</ion-title>
+<ion-menu side="start" menu-id="chatHistoryMenu" content-id="main-content" swipeGesture="true" class="minimalist-menu">
+  
+  <ion-header class="ion-no-border minimalist-menu-header">
+    <ion-toolbar class="minimalist-menu-toolbar">
+      <ion-title class="minimalist-menu-title">Riwayat Chat</ion-title>
       <ion-buttons slot="end">
-        <ion-button id="new-chat-btn">
-          <ion-icon slot="icon-only" name="add-outline" color="primary"></ion-icon>
+        <ion-button id="new-chat-btn" fill="clear" class="new-chat-button">
+          <ion-icon slot="icon-only" name="add-outline"></ion-icon>
         </ion-button>
       </ion-buttons>
     </ion-toolbar>
   </ion-header>
-  <ion-content>
-    <ion-list id="conversation-list" lines="full">
-      <!-- daftar percakapan akan diisi oleh js -->
-      <ion-item lines="none" class="ion-text-center" style="--min-height: 80px;">
-        <ion-label class="ion-text-center" color="medium">Memuat riwayat...</ion-label>
+
+  <ion-content class="minimalist-menu-content">
+    <ion-list id="conversation-list" lines="none" class="minimalist-conversation-list">
+      
+      <!-- Contoh Item Riwayat Aktif (Bahan referensi saat JS merender dinamis) -->
+      <!-- 
+      <ion-item class="history-item active">
+        <ion-icon name="chatbubble-outline" slot="start" class="history-icon"></ion-icon>
+        <ion-label class="history-label">
+          <h2>Ide Bisnis Kopi Susu</h2>
+          <p>Baru saja</p>
+        </ion-label>
       </ion-item>
+      
+      <ion-item class="history-item">
+        <ion-icon name="chatbubble-outline" slot="start" class="history-icon"></ion-icon>
+        <ion-label class="history-label">
+          <h2>Analisis Kode Python</h2>
+          <p>Kemarin</p>
+        </ion-label>
+      </ion-item> 
+      -->
+
+      <!-- Loading State -->
+      <div class="menu-loading-container" id="menu-loading-placeholder">
+        <ion-spinner name="crescent" class="custom-spinner"></ion-spinner>
+        <p>Memuat riwayat...</p>
+      </div>
+      
     </ion-list>
   </ion-content>
+
 </ion-menu>
+
+<style>
+  /* --- BASE MENU & TOOLBAR STYLE --- */
+  .minimalist-menu {
+    --width: 280px;
+  }
+
+  .minimalist-menu-header {
+    --background: #fafafa; /* Warna abu super terang */
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .minimalist-menu-toolbar {
+    --background: transparent;
+    --border-style: none;
+    --padding-start: 16px;
+    --padding-end: 12px;
+    --min-height: 56px;
+  }
+
+  .minimalist-menu-title {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #4a5568;
+  }
+
+  /* --- NEW CHAT BUTTON (PREMIUM & CLEAN) --- */
+  .new-chat-button {
+    --color: #1a202c; /* Warna gelap minimalis */
+    --background-hover: rgba(0, 0, 0, 0.05);
+    --border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    margin: 0;
+    transition: all 0.2s ease;
+  }
+
+  /* --- MENU CONTENT & LISTS --- */
+  .minimalist-menu-content {
+    --background: #fafafa; /* Konsisten dari atas sampai bawah */
+  }
+
+  .minimalist-conversation-list {
+    background: transparent !important;
+    padding: 12px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px; /* Memberikan celah udara di antara item list */
+  }
+
+  /* --- MODERN HISTORY ITEM STYLE --- */
+  .history-item {
+    --background: transparent;
+    --background-hover: rgba(0, 0, 0, 0.03) !important;
+    --border-radius: 10px; /* Membuat item mengambang dengan sudut membulat */
+    --padding-start: 12px;
+    --inner-padding-end: 12px;
+    margin: 0;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  /* Status Aktif / Chat yang sedang dipilih */
+  .history-item.active {
+    --background: rgba(0, 0, 0, 0.05) !important;
+  }
+
+  .history-icon {
+    font-size: 18px;
+    color: #718096;
+    margin-inline-end: 12px !important;
+  }
+
+  .history-item.active .history-icon {
+    color: #1a202c;
+  }
+
+  .history-label h2 {
+    font-size: 0.88rem !important;
+    font-weight: 500 !important;
+    color: #2d3748 !important;
+    margin-bottom: 2px !important;
+  }
+
+  .history-item.active .history-label h2 {
+    font-weight: 600 !important;
+    color: #1a202c !important;
+  }
+
+  .history-label p {
+    font-size: 0.72rem !important;
+    color: #a0aec0 !important;
+  }
+
+  /* --- CLEAN LOADING STATE --- */
+  .menu-loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 16px;
+    gap: 12px;
+  }
+
+  .custom-spinner {
+    --color: #718096;
+    width: 24px;
+    height: 24px;
+  }
+
+  .menu-loading-container p {
+    font-size: 0.8rem;
+    color: #718096;
+    margin: 0;
+  }
+
+
+  /* --- DARK MODE HARMONIZATION --- */
+  @media (prefers-color-scheme: dark) {
+    .minimalist-menu-header {
+      --background: #181818; /* Lebih gelap sedikit dibanding main content */
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .minimalist-menu-title {
+      color: #a0aec0;
+    }
+
+    .new-chat-button {
+      --color: #f7fafc;
+      --background-hover: rgba(255, 255, 255, 0.06);
+    }
+
+    .minimalist-menu-content {
+      --background: #181818;
+    }
+
+    .history-item {
+      --background-hover: rgba(255, 255, 255, 0.02) !important;
+    }
+
+    .history-item.active {
+      --background: rgba(255, 255, 255, 0.06) !important;
+    }
+
+    .history-icon {
+      color: #718096;
+    }
+
+    .history-item.active .history-icon {
+      color: #f7fafc;
+    }
+
+    .history-label h2 {
+      color: #cbd5e0 !important;
+    }
+
+    .history-item.active .history-label h2 {
+      color: #ffffff !important;
+    }
+
+    .history-label p {
+      color: #718096 !important;
+    }
+
+    .custom-spinner {
+      --color: #a0aec0;
+    }
+
+    .menu-loading-container p {
+      color: #a0aec0;
+    }
+  }
+</style>
