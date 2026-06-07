@@ -9,6 +9,15 @@ body, ion-app, ion-item, ion-label, ion-title, ion-button, ion-input, ion-textar
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* --- SOLUSI: HAPUS BOTTOM LINE / HIGHLIGHT FOKUS ION-INPUT --- */
+.minimalist-input-field {
+  --border-style: none !important; /* Menghilangkan border default */
+  --highlight-color: transparent !important; /* Menghilangkan highlight dasar */
+  --highlight-color-focused: transparent !important; /* Menghilangkan highlight saat aktif mengetik */
+  --highlight-color-valid: transparent !important;
+  --highlight-color-invalid: transparent !important;
+}
+
 /* --- TYPOGRAPHY MARKDOWN DI BALON CHAT (DIPERTAHANKAN & DIKEMAS RAPI) --- */
 .message-bubble p { 
   margin: 6px 0; 
