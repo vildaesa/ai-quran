@@ -1005,6 +1005,49 @@
     playContinuousAyatByIndex(index);
   }
 
+function forceIconRefresh(iconElement) {
+    if (!iconElement) return;
+    
+    // Teknik memaksa browser melakukan layout ulang pada icon
+    iconElement.style.visibility = 'visible';
+    iconElement.style.display = 'block';
+    
+    // Refresh name attribute secara paksa
+    const currentName = iconElement.getAttribute('name');
+    iconElement.removeAttribute('name');
+    setTimeout(() => {
+        iconElement.setAttribute('name', currentName);
+    }, 10);
+}
+
+// Update fungsi toggleContinuousPlay agar memanggil forceIconRefresh
+function toggleContinuousPlay() {
+    if (currentSurahVerses.length === 0) return;
+
+    if (isContinuousPlaying) {
+      if (currentAudioPlayer && !currentAudioPlayer.paused) {
+        currentAudioPlayer.pause();
+        playAllIcon.name = 'play-outline';
+        playAllIcon.setAttribute('name', 'play-outline');
+        forceIconRefresh(playAllIcon); // Force Refresh
+        playerCurrentAyahText.innerText = `Murottal Ayat ${currentPlayingIndex + 1} dijeda`;
+      } else if (currentAudioPlayer && currentAudioPlayer.paused) {
+        currentAudioPlayer.play().catch(e => console.error(e));
+        playAllIcon.name = 'pause-outline';
+        playAllIcon.setAttribute('name', 'pause-outline');
+        forceIconRefresh(playAllIcon); // Force Refresh
+        playerCurrentAyahText.innerText = `Melantunkan Ayat ${currentPlayingIndex + 1}...`;
+      }
+    } else {
+      isContinuousPlaying = true;
+      currentPlayingIndex = 0;
+      quranStopBtn.style.display = 'block';
+      playAllIcon.name = 'pause-outline';
+      playAllIcon.setAttribute('name', 'pause-outline');
+      forceIconRefresh(playAllIcon); // Force Refresh
+      playContinuousAyatByIndex(currentPlayingIndex);
+    }
+}
 
   // ---------- INITIALIZE APP ----------
   function init() {
