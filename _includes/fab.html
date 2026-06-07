@@ -1,5 +1,63 @@
-<ion-fab id="scroll-top-fab" class="scroll-top-fab" vertical="bottom" horizontal="end" slot="fixed" style="display: none;">
-  <ion-fab-button size="small" color="light" id="scroll-top-btn">
-    <ion-icon name="arrow-up-outline"></ion-icon>
+<ion-fab id="scroll-top-fab" class="minimalist-scroll-top" vertical="bottom" horizontal="end" slot="fixed" style="display: none;">
+  <ion-fab-button size="small" id="scroll-top-btn" class="minimalist-fab-button">
+    <ion-icon name="chevron-up-outline"></ion-icon>
   </ion-fab-button>
 </ion-fab>
+
+<style>
+  /* --- CUSTOM FAB POSITIONING --- */
+  .minimalist-scroll-top {
+    /* Digeser sedikit lebih tinggi agar tidak menutupi area input footer */
+    bottom: calc(env(safe-area-inset-bottom, 12px) + 72px) !important;
+    right: 20px !important;
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* --- MODERN FROSTED GLASS BUTTON --- */
+  .minimalist-fab-button {
+    /* Membuat latar belakang transparan ber-blur */
+    --background: rgba(255, 255, 255, 0.85); 
+    --background-hover: rgba(255, 255, 255, 0.95);
+    --background-activated: #ffffff;
+    --color: #1a202c; /* Warna ikon gelap netral */
+    
+    /* Bayangan tipis premium (soft shadow) */
+    --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); 
+    
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 50%;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: all 0.2s ease-in-out;
+  }
+
+  /* Mengganti ke 'chevron-up' yang terasa lebih ringan & modern ketimbang 'arrow-up' */
+  .minimalist-fab-button ion-icon {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  /* Efek interaktif hover mikro */
+  .minimalist-fab-button:hover {
+    transform: translateY(-2px);
+    --box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  }
+
+
+  /* --- DARK MODE ADJUSTMENTS --- */
+  @media (prefers-color-scheme: dark) {
+    .minimalist-fab-button {
+      --background: rgba(30, 30, 30, 0.8); /* Gelap transparan */
+      --background-hover: rgba(45, 45, 45, 0.9);
+      --background-activated: #1e1e1e;
+      --color: #f7fafc; /* Ikon putih terang */
+      --box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .minimalist-fab-button:hover {
+      --box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    }
+  }
+</style>
