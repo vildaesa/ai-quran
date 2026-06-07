@@ -788,7 +788,7 @@
           ${audioUrl ? `
           <div class="ayah-actions">
             <ion-button fill="clear" size="small" class="audio-play-btn" data-audio-src="${audioUrl}" data-ayah-num="${ayahNum}">
-              <ion-icon name="play-outline" slot="icon-only"></ion-icon> Putar Murottal
+              <ion-icon name="play-outline" slot="icon-only"></ion-icon>
             </ion-button>
           </div>` : ''}
         </div>
@@ -841,7 +841,7 @@
     playAllIcon.name = 'play-outline';
     playAllIcon.setAttribute('name', 'play-outline');
     
-    playerCurrentAyahText.innerText = 'Putar satu surah penuh dari ayat ke ayat secara kontinu';
+    playerCurrentAyahText.innerText = 'Putar semua surah';
 
     document.querySelectorAll('.ayah-card').forEach(card => {
       card.classList.remove('active-playing-ayah');
@@ -864,7 +864,7 @@
         
         const activeCardBtn = document.querySelector(`#ayah-${currentPlayingIndex + 1} .audio-play-btn`);
         if (activeCardBtn) {
-          activeCardBtn.innerHTML = `<ion-icon name="play-outline" slot="icon-only"></ion-icon> Putar Murottal`;
+          activeCardBtn.innerHTML = `<ion-icon name="play-outline" slot="icon-only"></ion-icon>`;
         }
       } else if (currentAudioPlayer && currentAudioPlayer.paused) {
         // RESUME KONTINU
@@ -878,7 +878,7 @@
         
         const activeCardBtn = document.querySelector(`#ayah-${currentPlayingIndex + 1} .audio-play-btn`);
         if (activeCardBtn) {
-          activeCardBtn.innerHTML = `<ion-icon name="pause-outline" slot="icon-only"></ion-icon> Jeda`;
+          activeCardBtn.innerHTML = `<ion-icon name="pause-outline" slot="icon-only"></ion-icon>`;
         }
       }
     } else {
@@ -933,7 +933,7 @@
     
     const currentCardBtn = activeCard ? activeCard.querySelector('.audio-play-btn') : null;
     if (currentCardBtn) {
-      currentCardBtn.innerHTML = `<ion-icon name="pause-outline" slot="icon-only"></ion-icon> Jeda`;
+      currentCardBtn.innerHTML = `<ion-icon name="pause-outline" slot="icon-only"></ion-icon>`;
       activeAudioBtn = currentCardBtn;
     }
 
@@ -946,7 +946,7 @@
 
     currentAudioPlayer.onended = () => {
       if (currentCardBtn) {
-        currentCardBtn.innerHTML = `<ion-icon name="play-outline" slot="icon-only"></ion-icon> Putar Murottal`;
+        currentCardBtn.innerHTML = `<ion-icon name="play-outline" slot="icon-only"></ion-icon>`;
       }
       playContinuousAyatByIndex(index + 1);
     };
