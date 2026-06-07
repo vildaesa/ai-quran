@@ -9,19 +9,77 @@ body, ion-app, ion-item, ion-label, ion-title, ion-button, ion-input, ion-textar
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* --- SOLUSI: HAPUS BOTTOM LINE / HIGHLIGHT FOKUS ION-INPUT --- */
+/* --- HAPUS BOTTOM LINE / HIGHLIGHT FOKUS ION-INPUT --- */
 .minimalist-input-field {
-  --border-style: none !important; /* Menghilangkan border default */
-  --highlight-color: transparent !important; /* Menghilangkan highlight dasar */
-  --highlight-color-focused: transparent !important; /* Menghilangkan highlight saat aktif mengetik */
+  --border-style: none !important;
+  --highlight-color: transparent !important;
+  --highlight-color-focused: transparent !important;
   --highlight-color-valid: transparent !important;
   --highlight-color-invalid: transparent !important;
 }
 
-/* --- TYPOGRAPHY MARKDOWN DI BALON CHAT (DIPERTAHANKAN & DIKEMAS RAPI) --- */
+/* --- SYSTEM OBROLAN TANPA BALON (BUBBLELESS) --- */
+
+.chat-container {
+  padding: 0 !important; /* Menghilangkan padding container agar border memanjang penuh */
+  max-width: 720px; /* Lebar bacaan yang optimal untuk mata manusia */
+  margin: 0 auto;
+}
+
+.message-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 24px 20px; /* Padding yang lega memberikan ruang bernapas pada teks */
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
+}
+
+/* PEMBATAS TIPIS: Hanya diberikan di bawah respon AI untuk memisahkan sesi diskusi */
+.message-wrapper.ai {
+  background-color: transparent;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05); /* Garis pemisah ultra tipis */
+}
+
+/* USER MESSAGE: Dibuat sedikit berbeda secara tipografi agar alur tetap jelas */
+.message-wrapper.user {
+  background-color: rgba(0, 0, 0, 0.015); /* Latar belakang super tipis untuk pembeda */
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+/* Menghilangkan seluruh gaya visual balon chat (background/shadow/border-radius) */
+.message-bubble {
+  max-width: 100% !important; /* Membiarkan teks memanfaatkan lebar penuh */
+  padding: 0 !important; /* Hapus padding balon lama */
+  background: transparent !important; /* Menyatukan dengan latar */
+  color: #1a202c !important;
+  font-size: 0.98rem;
+  line-height: 1.62;
+}
+
+/* Label Pengenal Pengirim (Opsional tapi bagus untuk memperjelas alur tanpa balon) */
+.message-wrapper::before {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.message-wrapper.user::before {
+  content: "Anda";
+  color: #718096;
+}
+
+.message-wrapper.ai::before {
+  content: "Asisten AI";
+  color: #4a5568;
+}
+
+/* --- TYPOGRAPHY MARKDOWN DI DALAM RESPON --- */
 .message-bubble p { 
-  margin: 6px 0; 
-  line-height: 1.5;
+  margin: 12px 0; 
 }
 .message-bubble p:first-child { 
   margin-top: 0; 
@@ -31,49 +89,54 @@ body, ion-app, ion-item, ion-label, ion-title, ion-button, ion-input, ion-textar
 }
 
 .message-bubble ul, .message-bubble ol { 
-  padding-left: 20px; 
-  margin: 8px 0; 
+  padding-left: 24px; 
+  margin: 12px 0; 
 }
 .message-bubble li { 
-  margin-bottom: 4px; 
+  margin-bottom: 6px; 
 }
 
 .message-bubble h1, .message-bubble h2, .message-bubble h3 { 
-  font-size: 1.05rem; 
+  color: #111111;
   font-weight: 600;
-  margin: 12px 0 6px 0; 
-  letter-spacing: -0.01em;
+  margin: 24px 0 10px 0; 
+  letter-spacing: -0.015em;
 }
+.message-bubble h1 { font-size: 1.4rem; }
+.message-bubble h2 { font-size: 1.2rem; }
+.message-bubble h3 { font-size: 1.05rem; }
 
 .message-bubble strong { 
   font-weight: 600; 
+  color: #111111;
 }
 
-/* Inline Code block styling */
+/* Kode inline & Block code modern */
 .message-bubble code { 
-  background: rgba(0, 0, 0, 0.06); 
-  padding: 2px 6px; 
-  border-radius: 4px; 
-  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; 
+  background: rgba(0, 0, 0, 0.05); 
+  padding: 3px 6px; 
+  border-radius: 6px; 
+  font-family: 'SFMono-Regular', Consolas, monospace; 
   font-size: 0.85em;
+  color: #1a202c;
 }
 
-/* Code block multi-baris */
 .message-bubble pre {
-  background: rgba(0, 0, 0, 0.04);
-  padding: 12px;
-  border-radius: 8px;
+  background: #f7f9fa;
+  padding: 16px;
+  border-radius: 12px;
   overflow-x: auto;
-  margin: 8px 0;
+  margin: 16px 0;
+  border: 1px solid rgba(0, 0, 0, 0.04);
 }
 .message-bubble pre code {
   background: transparent;
   padding: 0;
-  font-size: 0.85rem;
+  font-size: 0.88rem;
+  color: inherit;
 }
 
-
-/* --- SPLIT PANE & SIDEBAR LAYOUT CONFIGURATION --- */
+/* --- SPLIT PANE & SIDEBAR CONFIG --- */
 ion-split-pane {
   --side-width: var(--sidebar-width);
   --side-max-width: 320px;
@@ -83,12 +146,11 @@ ion-menu {
   --width: var(--sidebar-width);
 }
 
-
-/* --- ANIMATION TRANSITION --- */
+/* --- ANIMASI --- */
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -96,16 +158,40 @@ ion-menu {
   }
 }
 
-
-/* --- DARK MODE CODES ADJUSTMENT --- */
+/* --- PENYESUAIAN DARK MODE (DARK THEME) --- */
 @media (prefers-color-scheme: dark) {
-  /* Pengaturan kode block di mode gelap agar kontras & nyaman dibaca */
+  .message-wrapper.ai {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .message-wrapper.user {
+    background-color: rgba(255, 255, 255, 0.01);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  }
+
+  .message-wrapper.user::before {
+    color: #4a5568;
+  }
+
+  .message-wrapper.ai::before {
+    color: #a0aec0;
+  }
+
+  .message-bubble {
+    color: #e2e8f0 !important;
+  }
+
+  .message-bubble h1, .message-bubble h2, .message-bubble h3, .message-bubble strong {
+    color: #ffffff;
+  }
+
   .message-bubble code { 
-    background: rgba(255, 255, 255, 0.1); 
-    color: #e2e8f0;
+    background: rgba(255, 255, 255, 0.08); 
+    color: #f7fafc;
   }
   
   .message-bubble pre {
-    background: rgba(0, 0, 0, 0.2);
+    background: #1a1a1a;
+    border-color: rgba(255, 255, 255, 0.04);
   }
 }
