@@ -50,6 +50,29 @@
     return Date.now() + '-' + Math.random().toString(36).substr(2, 6);
   }
 
+  // Update Teks Waktu Real-Time di Empty Placeholder
+  function updatePlaceholderTime() {
+    const subtitleEl = document.getElementById('empty-chat-subtitle-text');
+    if (!subtitleEl) return;
+    
+    const now = new Date();
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const timeString = `${hours}:${minutes}`;
+
+    let ucapan = "Selamat malam";
+    const hourInt = now.getHours();
+    if (hourInt >= 4 && hourInt < 11) {
+      ucapan = "Selamat pagi";
+    } else if (hourInt >= 11 && hourInt < 15) {
+      ucapan = "Selamat siang";
+    } else if (hourInt >= 15 && hourInt < 18) {
+      ucapan = "Selamat sore";
+    }
+
+    subtitleEl.innerHTML = `${ucapan}.<br>sekarang pukul ${timeString} WIB<br>Ada yang bisa saya bantu tentang Al-Quran?`;
+  }
+
   // ---------- ION ALERT GLOBAL KONFIRM DINAMIS (Promise based) ----------
   async function confirmDialog(header, message) {
     return new Promise((resolve) => {
@@ -266,10 +289,11 @@
     const currentConv = conversations.find(c => c.id === currentConversationId);
     if (!currentConv) return;
 
-    messagesContainer.innerHTML = '';
+    messagesContainer.innerHTML = ''; // Sekarang aman karena empty-chat-placeholder berada diluar container ini!
     const messages = currentConv.messages;
 
     if (messages.length === 0) {
+      updatePlaceholderTime(); // Update waktu saat placeholder tampil
       emptyPlaceholder.style.display = 'flex';
     } else {
       emptyPlaceholder.style.display = 'none';
@@ -859,6 +883,7 @@
         // PERBAIKAN STATE IKON KE PLAY
         playAllIcon.name = 'play-outline';
         playAllIcon.setAttribute('name', 'play-outline');
+        forceIconRefresh(playAllIcon); // Force Refresh
 
         playerCurrentAyahText.innerText = `Murottal Ayat ${currentPlayingIndex + 1} sedang dijeda`;
 
@@ -873,6 +898,7 @@
         // PERBAIKAN STATE IKON KE PAUSE
         playAllIcon.name = 'pause-outline';
         playAllIcon.setAttribute('name', 'pause-outline');
+        forceIconRefresh(playAllIcon); // Force Refresh
 
         playerCurrentAyahText.innerText = `Melantunkan Ayat ${currentPlayingIndex + 1}...`;
 
@@ -891,6 +917,7 @@
       // PERBAIKAN STATE IKON KE PAUSE
       playAllIcon.name = 'pause-outline';
       playAllIcon.setAttribute('name', 'pause-outline');
+      forceIconRefresh(playAllIcon); // Force Refresh
 
       playContinuousAyatByIndex(currentPlayingIndex);
     }
@@ -1014,7 +1041,7 @@
     playContinuousAyatByIndex(index);
   }
 
-function forceIconRefresh(iconElement) {
+  function forceIconRefresh(iconElement) {
     if (!iconElement) return;
 
     // Teknik memaksa browser melakukan layout ulang pada icon
@@ -1027,36 +1054,7 @@ function forceIconRefresh(iconElement) {
     setTimeout(() => {
         iconElement.setAttribute('name', currentName);
     }, 10);
-}
-
-// Update fungsi toggleContinuousPlay agar memanggil forceIconRefresh
-function toggleContinuousPlay() {
-    if (currentSurahVerses.length === 0) return;
-
-    if (isContinuousPlaying) {
-      if (currentAudioPlayer && !currentAudioPlayer.paused) {
-        currentAudioPlayer.pause();
-        playAllIcon.name = 'play-outline';
-        playAllIcon.setAttribute('name', 'play-outline');
-        forceIconRefresh(playAllIcon); // Force Refresh
-        playerCurrentAyahText.innerText = `Murottal Ayat ${currentPlayingIndex + 1} dijeda`;
-      } else if (currentAudioPlayer && currentAudioPlayer.paused) {
-        currentAudioPlayer.play().catch(e => console.error(e));
-        playAllIcon.name = 'pause-outline';
-        playAllIcon.setAttribute('name', 'pause-outline');
-        forceIconRefresh(playAllIcon); // Force Refresh
-        playerCurrentAyahText.innerText = `Melantunkan Ayat ${currentPlayingIndex + 1}...`;
-      }
-    } else {
-      isContinuousPlaying = true;
-      currentPlayingIndex = 0;
-      quranStopBtn.style.display = 'block';
-      playAllIcon.name = 'pause-outline';
-      playAllIcon.setAttribute('name', 'pause-outline');
-      forceIconRefresh(playAllIcon); // Force Refresh
-      playContinuousAyatByIndex(currentPlayingIndex);
-    }
-}
+  }
 
   // ---------- INITIALIZE APP ----------
   function init() {
@@ -1089,9 +1087,14 @@ function toggleContinuousPlay() {
 
     loadFromLocalStorage();
 
-    // Render awal Chat
+    // Render awal Chat & Waktu
+    updatePlaceholderTime();
     renderSidebar();
     renderCurrentChat();
+    
+    // Auto-update jam setiap 30 detik agar selalu akurat saat berada di halaman depan
+    setInterval(updatePlaceholderTime, 30000);
+
     const curConv = conversations.find(c => c.id === currentConversationId);
     if (curConv) chatTitleEl.innerText = curConv.title;
 
@@ -1129,11 +1132,11 @@ function toggleContinuousPlay() {
     });
 
     quranNextBtn?.addEventListener('click', () => {
-      playNextAyat();
+      playNextAyah();
     });
 
     quranPrevBtn?.addEventListener('click', () => {
-      playPrevAyat();
+      playPrevAyah();
     });
 
     // Ambil katalog 114 surah berformat kartu buku saat halaman siap
