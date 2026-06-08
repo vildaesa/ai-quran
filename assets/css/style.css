@@ -234,8 +234,8 @@ body, ion-app, ion-item, ion-label, ion-title, ion-button, ion-input, ion-textar
 
 .ayah-arabic {
   font-family: 'Amiri', 'Scheherazade New', 'Noto Naskh Arabic', serif;
-  font-size: 2.1rem;
-  line-height: 2.4;
+  font-size: 1.1rem;
+  line-height: 2;
   color: #1a202c;
   text-align: right;
   direction: rtl;
