@@ -15,6 +15,7 @@ Interface chat modern untuk asisten Islami, dibangun dengan struktur **Jekyll Mo
 - **Icons**: IonIcons 7
 - **Markdown Parser**: Marked.js
 - **Logic**: Vanilla JavaScript (ES6)
+- **AI**: CLOUDFLARE AI
 
 ## Struktur Folder
 ```text
