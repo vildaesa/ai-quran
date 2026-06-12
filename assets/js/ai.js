@@ -406,7 +406,8 @@
 
       if (!response.ok) throw new Error('Gagal koneksi server.');
 
-      removeTypingIndicator();
+      // Catatan: JANGAN panggil removeTypingIndicator() di sini agar typing indicator tetap berkedip
+      // seolah AI sedang mencari surah saat event action terbaca.
 
       const aiMsg = {
         id: generateId(),
@@ -430,7 +431,7 @@
       const decoder = new TextDecoder();
       let aiFullText = '';
       let buffer = '';
-      let currentEvent = 'message'; // Menyimpan jenis event SSE yang aktif
+      let currentEvent = 'message'; 
 
       while (true) {
         const { done, value } = await reader.read();
@@ -444,7 +445,6 @@
           const trimmedLine = line.trim();
           if (!trimmedLine) continue;
 
-          // Periksa perubahan tipe event SSE
           if (trimmedLine.startsWith('event:')) {
             currentEvent = trimmedLine.split(':')[1].trim();
             continue;
@@ -460,21 +460,29 @@
                 if (action.type === 'openSurah') {
                   const surahNum = parseInt(action.surah, 10);
                   const ayahNum = parseInt(action.ayah, 10);
+                  const surahName = action.surahName || `Surah ${surahNum}`;
 
-                  // Buka modal Al-Quran secara programmatis jika modal tersedia
-                  if (quranModal && typeof quranModal.present === 'function') {
-                    quranModal.present();
-                  }
+                  // Hapus indikator ketik setelah jeda simulasi selesai
+                  // Berikan sensasi "AI sedang mencari" selama 2 detik sebelum modal menyala
+                  setTimeout(() => {
+                    removeTypingIndicator();
 
-                  // Buka lembar bacaan surah & jalankan scroll highlight
-                  openSurahReadingView(surahNum, `Surah ${surahNum}`);
-                  waitForAyahAndScroll(surahNum, ayahNum);
+                    if (quranModal && typeof quranModal.present === 'function') {
+                      quranModal.present();
+                    }
+
+                    // Tampilkan view membaca surah dengan Judul Lengkap Spesifik
+                    openSurahReadingView(surahNum, surahName);
+                    waitForAyahAndScroll(surahNum, ayahNum);
+                  }, 2200); 
                 }
               } catch (err) {
                 console.error("Gagal membaca payload event action:", err);
               }
             } else {
-              // Pemrosesan teks AI biasa
+              // Jika ini teks AI biasa (bukan action), kita bisa bersihkan typing indicator agar normal
+              removeTypingIndicator();
+
               try {
                 const parsed = JSON.parse(dataStr);
                 if (parsed.response) {
@@ -483,7 +491,6 @@
                   updateAIBubbleOnly(aiFullText);
                 }
               } catch (e) {
-                // Skenario fallback jika data dikirim sebagai raw text bukan JSON stringified
                 aiFullText += dataStr;
                 aiMsg.text = aiFullText;
                 updateAIBubbleOnly(aiFullText);
@@ -493,7 +500,6 @@
         }
       }
 
-      // Bersihkan sisa buffer jika masih tersisa line data tanpa akhiran new line
       if (buffer.trim().startsWith('data: ')) {
         const dataStr = buffer.trim().substring(5).trim();
         if (dataStr !== '[DONE]') {
@@ -521,7 +527,10 @@
       aiMessageElement = null;
     } finally {
       isWaitingResponse = false;
-      removeTypingIndicator();
+      // Safeguard pembersihan akhir typing indicator
+      setTimeout(() => {
+        removeTypingIndicator();
+      }, 2500);
     }
   }
 
@@ -713,7 +722,8 @@
     closeQuranBtn.style.display = 'none';
     quranModalFooter.style.display = 'block';
 
-    quranModalTitle.innerText = `Surah ${surahName}`;
+    // Memastikan title modal menggunakan format Nama Surah lengkap yang cantik
+    quranModalTitle.innerText = surahName.startsWith("Surah") ? surahName : `Surah ${surahName}`;
     loadedSurahNumber = parseInt(surahNumber, 10);
 
     fetchAndRenderSurah(loadedSurahNumber);
@@ -782,7 +792,7 @@
         const translationData = result.data[1].verses;
 
         if (Array.isArray(arabicData) && arabicData.length > 0) {
-          currentSurahVerses = []; // Bersihkan state jika terjadi sisa loop kegagalan di try block sebelumnya
+          currentSurahVerses = []; 
 
           const formattedVerses = arabicData.map((v, idx) => {
             const audioUrl = `https://cdn.aladhan.com/audios/ar.alafasy/${v.number}.mp3`;
@@ -844,7 +854,6 @@
         }
       }
 
-      // Bersihkan bismillah pembuka pada ayat pertama di semua surah selain Al-Fatihah & At-Taubah
       const bismillahStandard = "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ";
       const bismillahAlternative = "بِسمِ اللَّهِ الرَّحمٰنِ الرَّحيمِ";
       if (surahId !== 1 && surahId !== 9 && ayahNum === 1) {
@@ -894,7 +903,6 @@
   function enableContinuousPlayerControls() {
     quranPlayAllBtn.style.display = 'block';
 
-    // PERBAIKAN: Set kedua metode properti & atribut agar web component dipaksa render ulang secara instan
     playAllIcon.name = 'play-outline';
     playAllIcon.setAttribute('name', 'play-outline');
 
@@ -914,7 +922,6 @@
     quranPlayAllBtn.className = 'mini-control-btn play-main-btn';
     quranStopBtn.style.display = 'none';
 
-    // PERBAIKAN STATE IKON (RESET)
     playAllIcon.name = 'play-outline';
     playAllIcon.setAttribute('name', 'play-outline');
 
@@ -930,13 +937,11 @@
 
     if (isContinuousPlaying) {
       if (currentAudioPlayer && !currentAudioPlayer.paused) {
-        // PAUSE KONTINU
         currentAudioPlayer.pause();
 
-        // PERBAIKAN STATE IKON KE PLAY
         playAllIcon.name = 'play-outline';
         playAllIcon.setAttribute('name', 'play-outline');
-        forceIconRefresh(playAllIcon); // Force Refresh
+        forceIconRefresh(playAllIcon); 
 
         playerCurrentAyahText.innerText = `Murottal Ayat ${currentPlayingIndex + 1} sedang dijeda`;
 
@@ -945,13 +950,11 @@
           activeCardBtn.innerHTML = `<ion-icon name="play-outline" slot="icon-only"></ion-icon>`;
         }
       } else if (currentAudioPlayer && currentAudioPlayer.paused) {
-        // RESUME KONTINU
         currentAudioPlayer.play().catch(e => console.error("Gagal melanjutkan audio:", e));
 
-        // PERBAIKAN STATE IKON KE PAUSE
         playAllIcon.name = 'pause-outline';
         playAllIcon.setAttribute('name', 'pause-outline');
-        forceIconRefresh(playAllIcon); // Force Refresh
+        forceIconRefresh(playAllIcon); 
 
         playerCurrentAyahText.innerText = `Melantunkan Ayat ${currentPlayingIndex + 1}...`;
 
@@ -961,16 +964,14 @@
         }
       }
     } else {
-      // MULAI FRESH DARI INDEKS 0
       isContinuousPlaying = true;
       currentPlayingIndex = 0;
 
       quranStopBtn.style.display = 'block';
 
-      // PERBAIKAN STATE IKON KE PAUSE
       playAllIcon.name = 'pause-outline';
       playAllIcon.setAttribute('name', 'pause-outline');
-      forceIconRefresh(playAllIcon); // Force Refresh
+      forceIconRefresh(playAllIcon); 
 
       playContinuousAyatByIndex(currentPlayingIndex);
     }
@@ -1097,11 +1098,9 @@
   function forceIconRefresh(iconElement) {
     if (!iconElement) return;
 
-    // Teknik memaksa browser melakukan layout ulang pada icon
     iconElement.style.visibility = 'visible';
     iconElement.style.display = 'block';
 
-    // Refresh name attribute secara paksa
     const currentName = iconElement.getAttribute('name');
     iconElement.removeAttribute('name');
     setTimeout(() => {
@@ -1112,7 +1111,7 @@
   // Fungsi Pembantu: Pewaktu Tunggu Ayat Render di DOM & Memicu Autoscroll
   function waitForAyahAndScroll(surahNumber, ayahNumber) {
     let attempts = 0;
-    const maxAttempts = 30; // Batas durasi tunggu 6 detik (30 x 200ms) untuk mencegah memori bocor
+    const maxAttempts = 30; 
     
     const interval = setInterval(() => {
       attempts++;
@@ -1121,17 +1120,15 @@
       if (targetAyah) {
         clearInterval(interval);
         
-        // Gulir halaman secara dinamis ke arah elemen ayat sasaran
         targetAyah.scrollIntoView({ behavior: 'smooth', block: 'center' });
         
-        // Berikan penanda efek visual latar belakang lembut sementara waktu
         targetAyah.style.backgroundColor = '#f7fafc';
         targetAyah.style.borderLeft = '4px solid #2b6cb0';
         
         setTimeout(() => {
           targetAyah.style.backgroundColor = 'transparent';
           targetAyah.style.borderLeft = 'none';
-        }, 4000); // Penanda bertahan 4 detik
+        }, 4000); 
         
       } else if (attempts >= maxAttempts) {
         clearInterval(interval);
@@ -1171,18 +1168,15 @@
 
     loadFromLocalStorage();
 
-    // Render awal Chat & Waktu
     updatePlaceholderTime();
     renderSidebar();
     renderCurrentChat();
 
-    // Auto-update jam setiap 30 detik agar selalu akurat saat berada di halaman depan
     setInterval(updatePlaceholderTime, 30000);
 
     const curConv = conversations.find(c => c.id === currentConversationId);
     if (curConv) chatTitleEl.innerText = curConv.title;
 
-    // Event listeners Chat
     sendBtn.addEventListener('click', () => sendUserMessage());
     messageInput.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') {
@@ -1195,7 +1189,6 @@
     document.getElementById('clear-current-chat-btn')?.addEventListener('click', () => clearCurrentChat());
     document.getElementById('scroll-top-btn')?.addEventListener('click', () => scrollToTop());
 
-    // Event listeners Navigation Al-Quran
     closeQuranBtn?.addEventListener('click', () => {
       resetContinuousPlayerState();
       quranModal.dismiss();
@@ -1205,7 +1198,6 @@
       closeSurahReadingView();
     });
 
-    // Event listeners Footer Playlist Kontinu Al-Quran
     quranPlayAllBtn?.addEventListener('click', () => {
       toggleContinuousPlay();
     });
@@ -1223,7 +1215,6 @@
       playPrevAyah();
     });
 
-    // Ambil katalog 114 surah berformat kartu buku saat halaman siap
     renderQuranBookGrid();
 
     initScrollListener();
