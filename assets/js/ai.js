@@ -54,7 +54,7 @@
   function updatePlaceholderTime() {
     const subtitleEl = document.getElementById('empty-chat-subtitle-text');
     if (!subtitleEl) return;
-    
+
     const now = new Date();
     const hours = String(now.getHours()).padStart(2, '0');
     const minutes = String(now.getMinutes()).padStart(2, '0');
@@ -430,6 +430,7 @@
       const decoder = new TextDecoder();
       let aiFullText = '';
       let buffer = '';
+      let currentEvent = 'message'; // Menyimpan jenis event SSE yang aktif
 
       while (true) {
         const { done, value } = await reader.read();
@@ -441,24 +442,60 @@
 
         for (const line of lines) {
           const trimmedLine = line.trim();
-          if (!trimmedLine || !trimmedLine.startsWith('data: ')) continue;
+          if (!trimmedLine) continue;
 
-          const dataStr = trimmedLine.substring(6);
-          if (dataStr === '[DONE]') break;
+          // Periksa perubahan tipe event SSE
+          if (trimmedLine.startsWith('event:')) {
+            currentEvent = trimmedLine.split(':')[1].trim();
+            continue;
+          }
 
-          try {
-            const parsed = JSON.parse(dataStr);
-            if (parsed.response) {
-              aiFullText += parsed.response;
-              aiMsg.text = aiFullText;
-              updateAIBubbleOnly(aiFullText);
+          if (trimmedLine.startsWith('data:')) {
+            const dataStr = trimmedLine.substring(5).trim();
+            if (dataStr === '[DONE]') break;
+
+            if (currentEvent === 'action') {
+              try {
+                const action = JSON.parse(dataStr);
+                if (action.type === 'openSurah') {
+                  const surahNum = parseInt(action.surah, 10);
+                  const ayahNum = parseInt(action.ayah, 10);
+
+                  // Buka modal Al-Quran secara programmatis jika modal tersedia
+                  if (quranModal && typeof quranModal.present === 'function') {
+                    quranModal.present();
+                  }
+
+                  // Buka lembar bacaan surah & jalankan scroll highlight
+                  openSurahReadingView(surahNum, `Surah ${surahNum}`);
+                  waitForAyahAndScroll(surahNum, ayahNum);
+                }
+              } catch (err) {
+                console.error("Gagal membaca payload event action:", err);
+              }
+            } else {
+              // Pemrosesan teks AI biasa
+              try {
+                const parsed = JSON.parse(dataStr);
+                if (parsed.response) {
+                  aiFullText += parsed.response;
+                  aiMsg.text = aiFullText;
+                  updateAIBubbleOnly(aiFullText);
+                }
+              } catch (e) {
+                // Skenario fallback jika data dikirim sebagai raw text bukan JSON stringified
+                aiFullText += dataStr;
+                aiMsg.text = aiFullText;
+                updateAIBubbleOnly(aiFullText);
+              }
             }
-          } catch (e) { }
+          }
         }
       }
 
+      // Bersihkan sisa buffer jika masih tersisa line data tanpa akhiran new line
       if (buffer.trim().startsWith('data: ')) {
-        const dataStr = buffer.trim().substring(6);
+        const dataStr = buffer.trim().substring(5).trim();
         if (dataStr !== '[DONE]') {
           try {
             const parsed = JSON.parse(dataStr);
@@ -467,7 +504,11 @@
               aiMsg.text = aiFullText;
               updateAIBubbleOnly(aiFullText);
             }
-          } catch (e) { }
+          } catch (e) {
+            aiFullText += dataStr;
+            aiMsg.text = aiFullText;
+            updateAIBubbleOnly(aiFullText);
+          }
         }
       }
 
@@ -599,7 +640,7 @@
     if (!quranSurahGrid) return;
 
     quranSurahGrid.innerHTML = `
-      <div class="menu-loading-container" style="grid-column: 1/-1; padding: 100px 0;">
+      <div class="menu-loading-container" style="grid-column: 1/-1; padding: 100px 0; text-align: center;">
         <ion-spinner name="crescent" class="custom-spinner"></ion-spinner>
         <p style="margin-top: 12px; color: #718096;">Membuka lembaran mushaf...</p>
       </div>`;
@@ -640,7 +681,7 @@
 
         document.querySelectorAll('.quran-surah-card').forEach(card => {
           card.addEventListener('click', () => {
-            const num = card.getAttribute('data-surah-num');
+            const num = parseInt(card.getAttribute('data-surah-num'), 10);
             const name = card.getAttribute('data-surah-name');
             openSurahReadingView(num, name);
           });
@@ -652,8 +693,8 @@
     } catch (e) {
       console.error('Gagal memuat katalog Al-Quran:', e);
       quranSurahGrid.innerHTML = `
-        <div class="quran-welcome-state" style="grid-column: 1/-1; color: #e53e3e;">
-          <ion-icon name="alert-circle-outline" class="quran-large-icon" style="color: #feb2b2;"></ion-icon>
+        <div class="quran-welcome-state" style="grid-column: 1/-1; color: #e53e3e; text-align: center;">
+          <ion-icon name="alert-circle-outline" class="quran-large-icon" style="color: #feb2b2; font-size: 40px;"></ion-icon>
           <h4>Gagal Memuat Indeks</h4>
           <p>Terjadi kesalahan atau hambatan jaringan internet saat memuat daftar surah.</p>
           <ion-button fill="outline" size="small" id="retry-load-quran" style="margin-top: 16px; --color: #2b6cb0;">Coba Lagi</ion-button>
@@ -673,9 +714,9 @@
     quranModalFooter.style.display = 'block';
 
     quranModalTitle.innerText = `Surah ${surahName}`;
-    loadedSurahNumber = surahNumber;
+    loadedSurahNumber = parseInt(surahNumber, 10);
 
-    fetchAndRenderSurah(surahNumber);
+    fetchAndRenderSurah(loadedSurahNumber);
   }
 
   function closeSurahReadingView() {
@@ -693,13 +734,14 @@
 
   async function fetchAndRenderSurah(surahNumber) {
     quranVersesContainer.innerHTML = `
-      <div class="menu-loading-container" style="padding: 100px 0;">
+      <div class="menu-loading-container" style="padding: 100px 0; text-align: center;">
         <ion-spinner name="crescent" class="custom-spinner"></ion-spinner>
         <p style="margin-top: 12px; color: #718096;">Memuat lantunan ayat suci...</p>
       </div>`;
 
     currentSurahVerses = [];
 
+    // --- API UTAMA: equran.id ---
     try {
       const response = await fetch(`https://equran.id/api/v2/surat/${surahNumber}`);
       const result = await response.json();
@@ -730,6 +772,7 @@
       console.warn("API Utama gagal atau lambat, beralih ke Fallback API Global...", e);
     }
 
+    // --- API FALLBACK: alquran.cloud ---
     try {
       const response = await fetch(`https://api.alquran.cloud/v1/surah/${surahNumber}/editions/quran-uthmani,id.kemenag`);
       const result = await response.json();
@@ -739,6 +782,8 @@
         const translationData = result.data[1].verses;
 
         if (Array.isArray(arabicData) && arabicData.length > 0) {
+          currentSurahVerses = []; // Bersihkan state jika terjadi sisa loop kegagalan di try block sebelumnya
+
           const formattedVerses = arabicData.map((v, idx) => {
             const audioUrl = `https://cdn.aladhan.com/audios/ar.alafasy/${v.number}.mp3`;
             currentSurahVerses.push({
@@ -763,8 +808,8 @@
     } catch (e) {
       console.error('Semua API Al-Quran mengalami gangguan:', e);
       quranVersesContainer.innerHTML = `
-        <div class="quran-welcome-state" style="color: #e53e3e;">
-          <ion-icon name="alert-circle-outline" class="quran-large-icon" style="color: #feb2b2;"></ion-icon>
+        <div class="quran-welcome-state" style="color: #e53e3e; text-align: center; padding: 30px 10px;">
+          <ion-icon name="alert-circle-outline" class="quran-large-icon" style="color: #feb2b2; font-size: 40px;"></ion-icon>
           <h4>Pemuatan Gagal</h4>
           <p>Terjadi gangguan koneksi pada server penyedia ayat. Mohon periksa sinyal internet Anda dan ketuk tombol di bawah.</p>
           <ion-button fill="outline" size="small" id="retry-load-verses" style="margin-top: 16px; --color: #2b6cb0;">Coba Lagi</ion-button>
@@ -775,12 +820,13 @@
   }
 
   function renderAyatToDOM(versesList, surahNumber) {
+    const surahId = parseInt(surahNumber, 10);
     let html = '<div class="quran-verses-container">';
 
-    if (surahNumber !== '1' && surahNumber !== '9') {
+    if (surahId !== 1 && surahId !== 9) {
       html += `
-        <div style="text-align: center; padding: 12px 0 24px 0; border-bottom: 1px dashed rgba(0,0,0,0.04);">
-          <p class="ayah-arabic" style="text-align: center; font-size: 1.7rem; color: #2b6cb0;">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>
+        <div class="bismillah-header" style="text-align: center; padding: 12px 0 24px 0; border-bottom: 1px dashed rgba(0,0,0,0.04);">
+          <p class="ayah-arabic" style="text-align: center; font-size: 1.7rem; color: #2b6cb0; font-family: 'Amiri', serif;">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</p>
         </div>`;
     }
 
@@ -798,12 +844,19 @@
         }
       }
 
-      if (surahNumber !== '1' && surahNumber !== '9' && ayahNum === 1 && arabicText.startsWith("بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ")) {
-        arabicText = arabicText.replace("بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ", "").trim();
+      // Bersihkan bismillah pembuka pada ayat pertama di semua surah selain Al-Fatihah & At-Taubah
+      const bismillahStandard = "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ";
+      const bismillahAlternative = "بِسمِ اللَّهِ الرَّحمٰنِ الرَّحيمِ";
+      if (surahId !== 1 && surahId !== 9 && ayahNum === 1) {
+        if (arabicText.startsWith(bismillahStandard)) {
+          arabicText = arabicText.replace(bismillahStandard, "").trim();
+        } else if (arabicText.startsWith(bismillahAlternative)) {
+          arabicText = arabicText.replace(bismillahAlternative, "").trim();
+        }
       }
 
       html += `
-        <div class="ayah-card" id="ayah-${ayahNum}" data-ayah-index="${ayahNum - 1}">
+        <div class="ayah-card" id="ayah-${ayahNum}" data-ayah-index="${ayahNum - 1}" style="transition: background-color 0.4s ease, border-left 0.4s ease;">
           <div class="ayah-header">
             <span class="ayah-badge">Ayat ${ayahNum}</span>
           </div>
@@ -826,7 +879,7 @@
       btn.addEventListener('click', (e) => {
         const btnEl = e.currentTarget;
         const audioSrc = btnEl.getAttribute('data-audio-src');
-        const ayahNum = parseInt(btnEl.getAttribute('data-ayah-num'));
+        const ayahNum = parseInt(btnEl.getAttribute('data-ayah-num'), 10);
 
         handleIndividualAyahPlay(audioSrc, ayahNum, btnEl);
       });
@@ -1056,6 +1109,37 @@
     }, 10);
   }
 
+  // Fungsi Pembantu: Pewaktu Tunggu Ayat Render di DOM & Memicu Autoscroll
+  function waitForAyahAndScroll(surahNumber, ayahNumber) {
+    let attempts = 0;
+    const maxAttempts = 30; // Batas durasi tunggu 6 detik (30 x 200ms) untuk mencegah memori bocor
+    
+    const interval = setInterval(() => {
+      attempts++;
+      const targetAyah = document.getElementById(`ayah-${ayahNumber}`);
+      
+      if (targetAyah) {
+        clearInterval(interval);
+        
+        // Gulir halaman secara dinamis ke arah elemen ayat sasaran
+        targetAyah.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Berikan penanda efek visual latar belakang lembut sementara waktu
+        targetAyah.style.backgroundColor = '#f7fafc';
+        targetAyah.style.borderLeft = '4px solid #2b6cb0';
+        
+        setTimeout(() => {
+          targetAyah.style.backgroundColor = 'transparent';
+          targetAyah.style.borderLeft = 'none';
+        }, 4000); // Penanda bertahan 4 detik
+        
+      } else if (attempts >= maxAttempts) {
+        clearInterval(interval);
+        console.warn(`Elemen ayat tujuan #ayah-${ayahNumber} gagal termuat di halaman.`);
+      }
+    }, 200);
+  }
+
   // ---------- INITIALIZE APP ----------
   function init() {
     messagesContainer = document.getElementById('messages-container');
@@ -1091,7 +1175,7 @@
     updatePlaceholderTime();
     renderSidebar();
     renderCurrentChat();
-    
+
     // Auto-update jam setiap 30 detik agar selalu akurat saat berada di halaman depan
     setInterval(updatePlaceholderTime, 30000);
 
