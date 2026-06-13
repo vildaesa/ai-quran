@@ -404,10 +404,24 @@
         body: JSON.stringify({ messages: messageHistory })
       });
 
-      if (!response.ok) throw new Error('Gagal koneksi server.');
-
-      // Catatan: JANGAN panggil removeTypingIndicator() di sini agar typing indicator tetap berkedip
-      // seolah AI sedang mencari surah saat event action terbaca.
+      // PERBAIKAN UTAMA: Parsing pesan kesalahan detail langsung jika respons tidak ok
+      if (!response.ok) {
+        let errorText = 'Terjadi kendala pada server backend.';
+        try {
+          const errData = await response.json();
+          if (errData && errData.error) {
+            errorText = `Error Backend: ${errData.error}`;
+          }
+        } catch(e) {
+          try {
+            const rawText = await response.text();
+            if (rawText) {
+              errorText = `Error Backend (${response.status}): ${rawText.substring(0, 150)}`;
+            }
+          } catch(e2) {}
+        }
+        throw new Error(errorText);
+      }
 
       const aiMsg = {
         id: generateId(),
@@ -462,8 +476,6 @@
                   const ayahNum = parseInt(action.ayah, 10);
                   const surahName = action.surahName || `Surah ${surahNum}`;
 
-                  // Hapus indikator ketik setelah jeda simulasi selesai
-                  // Berikan sensasi "AI sedang mencari" selama 2 detik sebelum modal menyala
                   setTimeout(() => {
                     removeTypingIndicator();
 
@@ -471,7 +483,6 @@
                       quranModal.present();
                     }
 
-                    // Tampilkan view membaca surah dengan Judul Lengkap Spesifik
                     openSurahReadingView(surahNum, surahName);
                     waitForAyahAndScroll(surahNum, ayahNum);
                   }, 2200); 
@@ -480,7 +491,6 @@
                 console.error("Gagal membaca payload event action:", err);
               }
             } else {
-              // Jika ini teks AI biasa (bukan action), kita bisa bersihkan typing indicator agar normal
               removeTypingIndicator();
 
               try {
@@ -523,11 +533,12 @@
     } catch (error) {
       console.error('Error:', error);
       removeTypingIndicator();
-      addMessageToCurrent('ai', 'Maaf Bro, ada gangguan koneksi dengan asisten AI. Silakan periksa jaringanmu dan coba kembali.');
+      
+      // PERBAIKAN: Menampilkan detail kesalahan asli secara transparan ke user
+      addMessageToCurrent('ai', `Maaf Bro, ada gangguan koneksi dengan asisten AI.\n\n**Detail Kendala:** ${error.message || error}`);
       aiMessageElement = null;
     } finally {
       isWaitingResponse = false;
-      // Safeguard pembersihan akhir typing indicator
       setTimeout(() => {
         removeTypingIndicator();
       }, 2500);
@@ -722,7 +733,6 @@
     closeQuranBtn.style.display = 'none';
     quranModalFooter.style.display = 'block';
 
-    // Memastikan title modal menggunakan format Nama Surah lengkap yang cantik
     quranModalTitle.innerText = surahName.startsWith("Surah") ? surahName : `Surah ${surahName}`;
     loadedSurahNumber = parseInt(surahNumber, 10);
 
@@ -855,7 +865,7 @@
       }
 
       const bismillahStandard = "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ";
-      const bismillahAlternative = "بِسمِ اللَّهِ الرَّحمٰنِ الرَّحيمِ";
+      const bismillahAlternative = "بِسمِ اللَّهِ الرَّحمٰnِ الرَّحيمِ";
       if (surahId !== 1 && surahId !== 9 && ayahNum === 1) {
         if (arabicText.startsWith(bismillahStandard)) {
           arabicText = arabicText.replace(bismillahStandard, "").trim();
@@ -1095,6 +1105,7 @@
     playContinuousAyatByIndex(index);
   }
 
+  // Fungsi Refresh Ikon Paksa
   function forceIconRefresh(iconElement) {
     if (!iconElement) return;
 
