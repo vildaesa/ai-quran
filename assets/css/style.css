@@ -17,6 +17,10 @@ body, ion-app, ion-item, ion-label, ion-title, ion-button, ion-input, ion-textar
   --highlight-height: 0px !important;
 }
 
+.input-highlight .sc-ion-input-md .sc-ion-input-ios {
+ --highlight-height: 0px !important;
+}
+
 /* --- HYBRID CHAT CONTAINER --- */
 .chat-container {
   padding: 0 !important;
