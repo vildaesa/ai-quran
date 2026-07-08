@@ -14,7 +14,7 @@ body, ion-app, ion-item, ion-label, ion-title, ion-button, ion-input, ion-textar
 /* --- HAPUS BOTTOM LINE / HIGHLIGHT FOKUS ION-INPUT --- */
 .minimalist-input-field {
   --border-style: none !important;
-  --border-height: 0px !important;
+  --highlight-height: 0px !important;
 }
 
 /* --- HYBRID CHAT CONTAINER --- */
