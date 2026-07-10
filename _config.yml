@@ -2,7 +2,7 @@ title: AI Quran & Sholat Assistant
 description: Islamic AI Assistant for Quran and Prayer guidance.
 baseurl: "/ai-quran"
 url: "https://vildaesa.github.io"
-lang: "id-ID"
+lang: "id_ID"
 
 # Build settings
 markdown: kramdown
