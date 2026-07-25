@@ -15,7 +15,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
   <!-- PayPal JavaScript SDK (Ganti client-id dengan milikmu saat siap production) -->
-  <script src="https://www.paypal.com/sdk/js?BAA4ZnFKdGIwbyuwcc2YB5NFc9jHSVHf80xJ0-dJ2Z-ZeKOOjz11baY7Rtm6sS3K5TTooIWrXheKPv_oUA=sb&currency=USD"></script>
+  <script src="https://www.paypal.com/sdk/js?<%= ENV['CLIENT_ID'] %>=sb&currency=USD"></script>
 
   <style>
     /* FIX UTAMA SCROLLBAR: Memaksa Halaman Selalu Bisa Di-scroll */
@@ -441,8 +441,8 @@
       apiKey: "AIzaSyATyvdXXQHvJE6-EYiwXJ0jCZkvUBW-3c8",
       authDomain: "my-ai-quran.firebaseapp.com",
       projectId: "my-ai-quran",
-      storageBucket: "my-ai-quran.firebasestorage.app",
-      messagingSenderId: "1025965303376",
+      storageBucket: "",
+      messagingSenderId: "",
       appId: "1:1025965303376:web:d2aa080d9f81b4fa699355"
     };
 
