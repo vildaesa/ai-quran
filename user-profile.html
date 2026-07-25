@@ -23,6 +23,21 @@ permalink: /profile
   <script src="https://www.paypal.com/sdk/js?client-id=sb&currency=USD"></script>
 
   <style>
+    /* FIX UTAMA SCROLLBAR: Memaksa Halaman Selalu Bisa Di-scroll */
+    html, body {
+      height: 100% !important;
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      -webkit-overflow-scrolling: touch !important;
+      position: relative !important;
+    }
+
+    ion-app {
+      display: block !important;
+      min-height: 100vh !important;
+      overflow-y: auto !important;
+    }
+
     :root {
       --bg-page: #f8fafc;
       --card-bg: #ffffff;
@@ -58,11 +73,11 @@ permalink: /profile
     .profile-container {
       max-width: 960px;
       margin: 0 auto;
-      padding: 24px 16px 60px 16px;
+      padding: 24px 16px 80px 16px;
     }
 
     .back-nav {
-      display: flex;
+      display: inline-flex;
       align-items: center;
       gap: 8px;
       color: var(--accent-color);
@@ -73,7 +88,7 @@ permalink: /profile
       cursor: pointer;
     }
 
-    /* User Profile Card */
+    /* Kartu Profil User */
     .profile-card {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
@@ -122,9 +137,10 @@ permalink: /profile
       border-radius: 6px;
       color: var(--text-sub);
       display: inline-block;
+      word-break: break-all;
     }
 
-    /* Balance Dashboard Grid */
+    /* Grid Dashboard Saldo */
     .dashboard-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -234,20 +250,22 @@ permalink: /profile
 
     .paypal-btn-container {
       margin-top: 16px;
+      min-height: 45px;
     }
 
-    /* Transaction History Table */
+    /* Tabel Riwayat Transaksi */
     .history-card {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
       border-radius: 16px;
-      overflow: hidden;
+      overflow-x: auto;
     }
 
     .history-list {
       width: 100%;
       border-collapse: collapse;
       text-align: left;
+      min-width: 500px;
     }
 
     .history-list th, .history-list td {
@@ -272,7 +290,6 @@ permalink: /profile
       font-weight: 600;
     }
 
-    /* Login State Hidden Placeholder */
     #logged-out-view {
       text-align: center;
       padding: 80px 20px;
@@ -281,137 +298,150 @@ permalink: /profile
 </head>
 <body>
 
-  <div class="profile-container">
-    
-    <!-- Tombol Kembali ke Chat -->
-    <a href="./" class="back-nav">
-      <ion-icon name="arrow-back-outline"></ion-icon> Kembali ke Quran AI
-    </a>
-
-    <!-- VIEW USER BELUM LOGIN -->
-    <div id="logged-out-view" style="display: none;">
-      <ion-icon name="lock-closed-outline" style="font-size: 64px; color: var(--text-sub);"></ion-icon>
-      <h2>Akses Terbatas</h2>
-      <p style="color: var(--text-sub); max-width: 400px; margin: 0 auto 24px auto;">
-        Silakan masuk menggunakan akun Google Anda terlebih dahulu untuk melihat saldo token dan melakukan pembelian.
-      </p>
-      <ion-button color="primary" id="login-page-btn">
-        <ion-icon name="logo-google" slot="start"></ion-icon>
-        Masuk dengan Google
-      </ion-button>
-    </div>
-
-    <!-- VIEW USER SUDAH LOGIN -->
-    <div id="logged-in-view">
+  <ion-app>
+    <ion-content scroll-y="true" class="ion-padding-bottom">
       
-      <!-- User Info Header -->
-      <div class="profile-card">
-        <div class="user-info-group">
-          <img id="user-avatar-img" src="https://www.gravatar.com/avatar?d=mp" class="avatar-lg" alt="Profile Picture">
-          <div class="user-text">
-            <h2 id="user-display-name">Memuat Nama...</h2>
-            <p id="user-email-text">email@domain.com</p>
-            <span class="user-uid-badge" id="user-uid-badge">UID: -</span>
-          </div>
-        </div>
-        <ion-button fill="outline" color="danger" id="logout-page-btn" size="small">
-          <ion-icon name="log-out-outline" slot="start"></ion-icon>
-          Keluar
-        </ion-button>
-      </div>
-
-      <!-- Dashboard Statistics -->
-      <div class="dashboard-grid">
-        <div class="stat-card">
-          <div class="stat-header">
-            <span>Sisa Saldo Token</span>
-            <ion-icon name="wallet-outline" style="font-size: 20px; color: var(--accent-color);"></ion-icon>
-          </div>
-          <h3 class="stat-value" id="balance-display">0</h3>
-          <div class="stat-subtext" id="balance-status-text">Siap digunakan untuk chat AI</div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-header">
-            <span>Model AI Aktif</span>
-            <ion-icon name="sparkles-outline" style="font-size: 20px; color: #8b5cf6;"></ion-icon>
-          </div>
-          <h3 class="stat-value" style="font-size: 1.2rem;">Gemma 3 12B IT</h3>
-          <div class="stat-subtext" style="color: var(--text-sub);">Cloudflare Workers AI</div>
-        </div>
-      </div>
-
-      <!-- Pembelian Paket Token dengan PayPal -->
-      <div class="section-title">
-        <ion-icon name="cart-outline" style="color: var(--accent-color);"></ion-icon>
-        Beli Token (Top Up)
-      </div>
-
-      <div class="plans-grid">
+      <div class="profile-container">
         
-        <!-- Starter Plan -->
-        <div class="plan-card">
-          <div>
-            <h3 class="plan-name">Starter</h3>
-            <div class="plan-tokens">50.000 <span style="font-size: 0.8rem; color: var(--text-sub);">Token</span></div>
-            <div class="plan-price">$1.00 USD</div>
-          </div>
-          <div id="paypal-button-starter" class="paypal-btn-container"></div>
+        <!-- Tombol Kembali -->
+        <a href="./" class="back-nav">
+          <ion-icon name="arrow-back-outline"></ion-icon> Kembali ke Quran AI
+        </a>
+
+        <!-- TAMPILAN UNTUK USER BELUM LOGIN -->
+        <div id="logged-out-view" style="display: none;">
+          <ion-icon name="lock-closed-outline" style="font-size: 64px; color: var(--text-sub);"></ion-icon>
+          <h2>Akses Terbatas</h2>
+          <p style="color: var(--text-sub); max-width: 400px; margin: 0 auto 24px auto;">
+            Silakan masuk menggunakan akun Google Anda terlebih dahulu untuk melihat saldo token dan melakukan pembelian.
+          </p>
+          <ion-button color="primary" id="login-page-btn">
+            <ion-icon name="logo-google" slot="start"></ion-icon>
+            Masuk dengan Google
+          </ion-button>
         </div>
 
-        <!-- Pro Plan (Popular) -->
-        <div class="plan-card popular">
-          <span class="popular-badge">Paling Laris</span>
-          <div>
-            <h3 class="plan-name">Pro</h3>
-            <div class="plan-tokens">300.000 <span style="font-size: 0.8rem; color: var(--text-sub);">Token</span></div>
-            <div class="plan-price">$5.00 USD</div>
+        <!-- TAMPILAN UNTUK USER SUDAH LOGIN -->
+        <div id="logged-in-view">
+          
+          <!-- Informasi Profil User -->
+          <div class="profile-card">
+            <div class="user-info-group">
+              <img id="user-avatar-img" src="https://www.gravatar.com/avatar?d=mp" class="avatar-lg" alt="Foto Profil">
+              <div class="user-text">
+                <h2 id="user-display-name">Memuat Nama...</h2>
+                <p id="user-email-text">email@domain.com</p>
+                <span class="user-uid-badge" id="user-uid-badge">UID: -</span>
+              </div>
+            </div>
+            <ion-button fill="outline" color="danger" id="logout-page-btn" size="small">
+              <ion-icon name="log-out-outline" slot="start"></ion-icon>
+              Keluar
+            </ion-button>
           </div>
-          <div id="paypal-button-pro" class="paypal-btn-container"></div>
-        </div>
 
-        <!-- Business Plan -->
-        <div class="plan-card">
-          <div>
-            <h3 class="plan-name">Business</h3>
-            <div class="plan-tokens">1.500.000 <span style="font-size: 0.8rem; color: var(--text-sub);">Token</span></div>
-            <div class="plan-price">$20.00 USD</div>
+          <!-- Statistik Saldo & AI Model -->
+          <div class="dashboard-grid">
+            <div class="stat-card">
+              <div class="stat-header">
+                <span>Sisa Saldo Token</span>
+                <ion-icon name="wallet-outline" style="font-size: 20px; color: var(--accent-color);"></ion-icon>
+              </div>
+              <h3 class="stat-value" id="balance-display">0</h3>
+              <div class="stat-subtext" id="balance-status-text">Siap digunakan untuk chat AI</div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stat-header">
+                <span>Model AI Aktif</span>
+                <ion-icon name="sparkles-outline" style="font-size: 20px; color: #8b5cf6;"></ion-icon>
+              </div>
+              <h3 class="stat-value" style="font-size: 1.2rem;">Gemma 3 12B IT</h3>
+              <div class="stat-subtext" style="color: var(--text-sub);">Cloudflare Workers AI</div>
+            </div>
           </div>
-          <div id="paypal-button-business" class="paypal-btn-container"></div>
+
+          <!-- Opsi Pembelian Token PayPal -->
+          <div class="section-title">
+            <ion-icon name="cart-outline" style="color: var(--accent-color);"></ion-icon>
+            Beli Token (Top Up)
+          </div>
+
+          <div class="plans-grid">
+            
+            <!-- Paket Starter -->
+            <div class="plan-card">
+              <div>
+                <h3 class="plan-name">Starter</h3>
+                <div class="plan-tokens">50.000 <span style="font-size: 0.8rem; color: var(--text-sub);">Token</span></div>
+                <div class="plan-price">$1.00 USD</div>
+              </div>
+              <div id="paypal-button-starter" class="paypal-btn-container"></div>
+            </div>
+
+            <!-- Paket Pro -->
+            <div class="plan-card popular">
+              <span class="popular-badge">Paling Laris</span>
+              <div>
+                <h3 class="plan-name">Pro</h3>
+                <div class="plan-tokens">300.000 <span style="font-size: 0.8rem; color: var(--text-sub);">Token</span></div>
+                <div class="plan-price">$5.00 USD</div>
+              </div>
+              <div id="paypal-button-pro" class="paypal-btn-container"></div>
+            </div>
+
+            <!-- Paket Business -->
+            <div class="plan-card">
+              <div>
+                <h3 class="plan-name">Business</h3>
+                <div class="plan-tokens">1.500.000 <span style="font-size: 0.8rem; color: var(--text-sub);">Token</span></div>
+                <div class="plan-price">$20.00 USD</div>
+              </div>
+              <div id="paypal-button-business" class="paypal-btn-container"></div>
+            </div>
+
+          </div>
+
+          <!-- Riwayat Transaksi -->
+          <div class="section-title">
+            <ion-icon name="time-outline" style="color: var(--accent-color);"></ion-icon>
+            Riwayat Pemakaian & Transaksi
+          </div>
+
+          <div class="history-card">
+            <table class="history-list">
+              <thead>
+                <tr>
+                  <th>Tanggal</th>
+                  <th>Aktivitas</th>
+                  <th>Perubahan Token</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="history-table-body">
+                <tr>
+                  <td colspan="4" style="text-align: center; color: var(--text-sub);">Memuat riwayat...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
         </div>
 
       </div>
 
-      <!-- Riwayat Transaksi & Pemakaian -->
-      <div class="section-title">
-        <ion-icon name="time-outline" style="color: var(--accent-color);"></ion-icon>
-        Riwayat Pemakaian & Transaksi
-      </div>
-
-      <div class="history-card">
-        <table class="history-list">
-          <thead>
-            <tr>
-              <th>Tanggal</th>
-              <th>Aktivitas</th>
-              <th>Perubahan Token</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="history-table-body">
-            <tr>
-              <td colspan="4" style="text-align: center; color: var(--text-sub);">Memuat riwayat...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-    </div>
-
-  </div>
+    </ion-content>
+  </ion-app>
 
   <script>
-    // ---------- FIREBASE CONFIGURATION ----------
+    // FIX TAMBAHAN: Paksa hapus gaya overflow-hidden dari body secara berkala jika diinjeksi oleh script eksternal
+    setInterval(() => {
+      document.body.style.setProperty('overflow', 'auto', 'important');
+      document.body.style.setProperty('overflow-y', 'auto', 'important');
+      document.documentElement.style.setProperty('overflow-y', 'auto', 'important');
+    }, 500);
+
+    // ---------- KONFIGURASI FIREBASE ----------
     const firebaseConfig = {
       apiKey: "AIzaSyATyvdXXQHvJE6-EYiwXJ0jCZkvUBW-3c8",
       authDomain: "my-ai-quran.firebaseapp.com",
@@ -430,7 +460,7 @@ permalink: /profile
     }
     const auth = firebase.auth();
 
-    // ---------- AUTH LISTENER ----------
+    // ---------- LISTENER STATUS AUTH ----------
     auth.onAuthStateChanged((user) => {
       if (user) {
         currentUser = user;
@@ -443,7 +473,7 @@ permalink: /profile
         document.getElementById('user-email-text').innerText = user.email || '';
         document.getElementById('user-uid-badge').innerText = `UID: ${user.uid}`;
 
-        // Fetch Balance & Render PayPal
+        // Ambil Saldo & Render Tombol PayPal
         fetchUserBalance(user.uid);
         initPayPalButtons(user.uid);
         renderHistoryTable();
@@ -454,7 +484,7 @@ permalink: /profile
       }
     });
 
-    // Login/Logout Handler
+    // Event Handler Login/Logout
     document.getElementById('login-page-btn')?.addEventListener('click', () => {
       const provider = new firebase.auth.GoogleAuthProvider();
       auth.signInWithPopup(provider);
@@ -464,7 +494,7 @@ permalink: /profile
       auth.signOut();
     });
 
-    // ---------- FETCH USER BALANCE DARI BILLING WORKER ----------
+    // ---------- AMBIL SALDO DARI WORKER BILLING ----------
     async function fetchUserBalance(userId) {
       try {
         const res = await fetch(`${BILLING_WORKER_URL}/balance?userId=${encodeURIComponent(userId)}`);
@@ -487,7 +517,7 @@ permalink: /profile
       }
     }
 
-    // ---------- CREDIT TOKENS VIA WORKER (/purchase) ----------
+    // ---------- PROSES KREDIT TOKEN VIA WORKER ----------
     async function creditTokensToUser(userId, sku, referenceId) {
       try {
         const res = await fetch(`${BILLING_WORKER_URL}/purchase`, {
@@ -512,7 +542,7 @@ permalink: /profile
       }
     }
 
-    // ---------- PAYPAL BUTTONS INTEGRATION ----------
+    // ---------- INISIALISASI TOMBOL PAYPAL ----------
     function initPayPalButtons(userId) {
       const plans = [
         { id: 'paypal-button-starter', sku: 'STARTER', price: '1.00' },
@@ -544,7 +574,7 @@ permalink: /profile
       });
     }
 
-    // ---------- TRANSACTION HISTORY LOG ----------
+    // ---------- SIMPAN & RENDER RIWAYAT TRANSAKSI ----------
     function saveTransactionRecord(sku, tokens, refId) {
       const records = JSON.parse(localStorage.getItem('quran_ai_transactions') || '[]');
       records.unshift({
