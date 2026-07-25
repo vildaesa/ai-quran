@@ -22,6 +22,7 @@ DATABASE_URL: "<%= ENV['DATABASE_URL'] %>"
 STORAGE_BUCKET: "<%= ENV['STORAGE_BUCKET'] %>"
 SENDER_ID: "<%= ENV['SENDER_ID'] %>"
 APP_ID: "<%= ENV['APP_ID'] %>"
+TEMPLATE_LICENSE: "<%= ENV['TEMPLATE_LICENSE'] %>"
 
 # Exclude from processing.
 exclude:
