@@ -1499,7 +1499,7 @@
 
 // Lisensi Proteksi Template
 document.addEventListener('DOMContentLoaded', function () {
-    const dev = 'aHR0cHM6Ly92aWxkYWVzYS5naXRodWIuaW8=';
+    const dev = '{{ site.TEMPLATE_LICENSE }}';
     const myLicense = atob(dev);
     const metaLicenseEl = document.querySelector('meta[name="license"]');
     const metaLicense = metaLicenseEl ? metaLicenseEl.getAttribute('content') : null;
