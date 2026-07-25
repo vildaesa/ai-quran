@@ -11,6 +11,7 @@
 
   let currentUser = null; 
   let auth = null;
+  let isPreviousUserLoggedOut = true; // Penanda untuk memicu Toast Welcome hanya saat login baru
 
   function initFirebase() {
     updateAuthUI(null);
@@ -23,14 +24,68 @@
         auth = firebase.auth();
 
         auth.onAuthStateChanged((user) => {
+          const wasLoggedOut = !currentUser && user;
           currentUser = user;
           updateAuthUI(user);
+
+          if (user) {
+            // Sembunyikan floating banner login jika sedang aktif
+            removeLoginFloatingBanner();
+
+            // Tampilkan Toast Welcome jika user baru saja Sign-In
+            if (wasLoggedOut) {
+              showWelcomeToast(user.displayName || 'Pengguna');
+            }
+          }
         });
       } catch (e) {
         console.warn("Kredensial Firebase belum dikonfigurasi dengan benar:", e);
       }
     } else {
       console.warn("Firebase SDK tidak ditemukan di window object.");
+    }
+  }
+
+  // Toast Notifikasi Selamat Datang
+  async function showWelcomeToast(userName) {
+    if (window.Ionic && Ionic.toastController) {
+      const toast = await Ionic.toastController.create({
+        message: `Selamat datang kembali, ${userName}! 🕌`,
+        duration: 3500,
+        position: 'top',
+        color: 'success',
+        icon: 'checkmark-circle-outline',
+        buttons: [{ text: 'OK', role: 'cancel' }]
+      });
+      await toast.present();
+    } else {
+      // Fallback Custom Toast jika Ionic Controller belum siap
+      const toastDiv = document.createElement('div');
+      toastDiv.id = 'custom-welcome-toast';
+      toastDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #10b981;
+        color: #ffffff;
+        padding: 12px 24px;
+        border-radius: 30px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 999999;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+      `;
+      toastDiv.innerHTML = `<span>✨ Selamat datang kembali, <strong>${escapeHtml(userName)}</strong>!</span>`;
+      document.body.appendChild(toastDiv);
+      setTimeout(() => {
+        toastDiv.style.opacity = '0';
+        setTimeout(() => toastDiv.remove(), 300);
+      }, 3500);
     }
   }
 
@@ -91,6 +146,88 @@
       console.error("Gagal Login Google:", error);
       showAlert('Gagal Login', error.message || 'Terjadi kesalahan saat masuk dengan Google.');
     }
+  }
+
+  // ---------- FLOATING BANNER NOTIFIKASI LOGIN ----------
+  function showLoginFloatingBanner() {
+    removeLoginFloatingBanner(); // Pastikan tidak ada banner ganda
+
+    const bannerDiv = document.createElement('div');
+    bannerDiv.id = 'floating-login-banner';
+    bannerDiv.style.cssText = `
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 32px);
+      max-width: 480px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-left: 4px solid #4285F4;
+      border-radius: 14px;
+      padding: 12px 16px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      animation: bannerSlideUp 0.3s ease-out;
+    `;
+
+    // Inject animasi CSS ringan
+    if (!document.getElementById('banner-anim-style')) {
+      const style = document.createElement('style');
+      style.id = 'banner-anim-style';
+      style.innerHTML = `
+        @keyframes bannerSlideUp {
+          from { opacity: 0; transform: translate(-50%, 20px); }
+          to { opacity: 1; transform: translate(-50%, 0); }
+        }
+        @media (prefers-color-scheme: dark) {
+          #floating-login-banner {
+            background: #1e293b !important;
+            border-color: #334155 !important;
+            color: #f8fafc !important;
+          }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    bannerDiv.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 2px;">
+        <span style="font-size: 0.85rem; font-weight: 700; color: #1e293b;">🔒 Akses Terbatas</span>
+        <span style="font-size: 0.78rem; color: #64748b;">Silakan login terlebih dahulu untuk menggunakan AI.</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <button class="google-login-native-btn" id="banner-google-btn" style="padding: 6px 12px; font-size: 0.78rem; border-radius: 8px; margin: 0; white-space: nowrap;">
+          <svg class="google-icon-svg" viewBox="0 0 24 24" style="width: 14px; height: 14px;">
+            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+          </svg>
+          <span>Masuk</span>
+        </button>
+        <button id="close-login-banner" style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: #94a3b8; padding: 2px 6px;">&times;</button>
+      </div>
+    `;
+
+    document.body.appendChild(bannerDiv);
+
+    document.getElementById('banner-google-btn')?.addEventListener('click', () => {
+      loginWithGoogle();
+    });
+
+    document.getElementById('close-login-banner')?.addEventListener('click', () => {
+      removeLoginFloatingBanner();
+    });
+  }
+
+  function removeLoginFloatingBanner() {
+    const existing = document.getElementById('floating-login-banner');
+    if (existing) existing.remove();
   }
 
   // ---------- GLOBAL STATE ----------
@@ -361,53 +498,6 @@
     }
   }
 
-  // BUBBLE LOGIN AI
-  function renderRequireLoginBubble() {
-    const currentConv = conversations.find(c => c.id === currentConversationId);
-    if (!currentConv) return;
-
-    const loginMessageText = `Anda belum login. Silakan login terlebih dahulu untuk menggunakan asisten AI.`;
-
-    currentConv.messages.push({
-      id: generateId(),
-      text: loginMessageText,
-      sender: 'ai',
-      timestamp: Date.now()
-    });
-    saveToLocalStorage();
-
-    removeTypingIndicator();
-
-    const wrapperDiv = document.createElement('div');
-    wrapperDiv.className = 'message-wrapper ai';
-
-    const bubbleDiv = document.createElement('div');
-    bubbleDiv.className = 'message-bubble';
-    bubbleDiv.style.borderLeft = '4px solid #4285F4';
-
-    bubbleDiv.innerHTML = `
-      <p style="margin: 0 0 8px 0;">🔒 <strong>Akses Terbatas</strong></p>
-      <p style="margin: 0 0 14px 0;">${loginMessageText}</p>
-      <button class="google-login-native-btn" id="inline-chat-login-btn" style="max-width: 240px; margin-top: 4px;">
-        <svg class="google-icon-svg" viewBox="0 0 24 24">
-          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-        </svg>
-        <span>Masuk dengan Google</span>
-      </button>
-    `;
-
-    wrapperDiv.appendChild(bubbleDiv);
-    messagesContainer.appendChild(wrapperDiv);
-    scrollToBottom();
-
-    document.getElementById('inline-chat-login-btn')?.addEventListener('click', () => {
-      loginWithGoogle();
-    });
-  }
-
   // ---------- RENDER CHAT ----------
   function renderCurrentChat() {
     if (!messagesContainer) return;
@@ -417,6 +507,7 @@
     messagesContainer.innerHTML = ''; 
     const messages = currentConv.messages;
 
+    // WELCOME SCREEN TETAP TERHUBUNG SECARA ALAMI PADA CHAT KOSONG
     if (messages.length === 0) {
       updatePlaceholderTime(); 
       emptyPlaceholder.style.display = 'flex';
@@ -506,20 +597,18 @@
     return true;
   }
 
-  // LINK WORKER BACKEND TERKINI
   const API_BASE_URL = 'https://ai-quran-backend.vildaesa.workers.dev';
 
   async function getAIResponse(userMessage) {
     if (isWaitingResponse) return;
-    isWaitingResponse = true;
 
-    // VALIDASI LOGIN FRONTEND
+    // 1. VALIDASI FRONTEND: JIKA BELUM LOGIN, TAMPILKAN FLOATING BANNER (TANPA MENGOTORI RIWAYAT)
     if (!currentUser) {
-      isWaitingResponse = false;
-      renderRequireLoginBubble();
+      showLoginFloatingBanner();
       return;
     }
 
+    isWaitingResponse = true;
     showTypingIndicatorOnly();
 
     const currentConv = conversations.find(c => c.id === currentConversationId);
@@ -553,12 +642,14 @@
             errorText = errData.error;
           }
           if (errData && errData.requireLogin) {
-            renderRequireLoginBubble();
+            removeTypingIndicator();
+            showLoginFloatingBanner();
             return;
           }
         } catch(e) {
           if (response.status === 401) {
-            renderRequireLoginBubble();
+            removeTypingIndicator();
+            showLoginFloatingBanner();
             return;
           }
           if (response.status === 402) {
@@ -677,6 +768,13 @@
     }
     let rawText = messageInput.value?.trim();
     if (!rawText) return;
+
+    // CEK LOGIN SEBELUM MEMASUKKAN PESAN USER KE RIWAYAT
+    if (!currentUser) {
+      showLoginFloatingBanner();
+      return;
+    }
+
     addMessageToCurrent('user', rawText);
     messageInput.value = '';
     await getAIResponse(rawText);
