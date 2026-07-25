@@ -1,5 +1,5 @@
 <ion-menu side="start" menu-id="chatHistoryMenu" content-id="main-content" swipeGesture="true" class="minimalist-menu">
-  
+
   <ion-header class="ion-no-border minimalist-menu-header">
     <ion-toolbar class="minimalist-menu-toolbar">
       <ion-title class="minimalist-menu-title">Riwayat Chat</ion-title>
@@ -13,34 +13,22 @@
 
   <ion-content class="minimalist-menu-content">
     <ion-list id="conversation-list" lines="none" class="minimalist-conversation-list">
-      
-      <!-- Contoh Item Riwayat Aktif (Bahan referensi saat JS merender dinamis) -->
-      <!-- 
-      <ion-item class="history-item active">
-        <ion-icon name="chatbubble-outline" slot="start" class="history-icon"></ion-icon>
-        <ion-label class="history-label">
-          <h2>Ide Bisnis Kopi Susu</h2>
-          <p>Baru saja</p>
-        </ion-label>
-      </ion-item>
-      
-      <ion-item class="history-item">
-        <ion-icon name="chatbubble-outline" slot="start" class="history-icon"></ion-icon>
-        <ion-label class="history-label">
-          <h2>Analisis Kode Python</h2>
-          <p>Kemarin</p>
-        </ion-label>
-      </ion-item> 
-      -->
 
       <!-- Loading State -->
       <div class="menu-loading-container" id="menu-loading-placeholder">
         <ion-spinner name="crescent" class="custom-spinner"></ion-spinner>
         <p>Memuat riwayat...</p>
       </div>
-      
+
     </ion-list>
   </ion-content>
+
+  <!-- USER AUTH PROFILE FOOTER (NEW) -->
+  <ion-footer class="ion-no-border minimalist-menu-footer">
+    <div id="firebase-auth-container" class="auth-footer-container">
+      <!-- Di-render otomatis via JavaScript -->
+    </div>
+  </ion-footer>
 
 </ion-menu>
 
@@ -71,9 +59,9 @@
     color: #4a5568;
   }
 
-  /* --- NEW CHAT BUTTON (PREMIUM & CLEAN) --- */
+  /* --- NEW CHAT BUTTON --- */
   .new-chat-button {
-    --color: #1a202c; /* Warna gelap minimalis */
+    --color: #1a202c;
     --background-hover: rgba(0, 0, 0, 0.05);
     --border-radius: 50%;
     width: 38px;
@@ -84,7 +72,7 @@
 
   /* --- MENU CONTENT & LISTS --- */
   .minimalist-menu-content {
-    --background: #fafafa; /* Konsisten dari atas sampai bawah */
+    --background: #fafafa;
   }
 
   .minimalist-conversation-list {
@@ -92,14 +80,14 @@
     padding: 12px 10px;
     display: flex;
     flex-direction: column;
-    gap: 4px; /* Memberikan celah udara di antara item list */
+    gap: 4px;
   }
 
   /* --- MODERN HISTORY ITEM STYLE --- */
   .history-item {
     --background: transparent;
     --background-hover: rgba(0, 0, 0, 0.03) !important;
-    --border-radius: 10px; /* Membuat item mengambang dengan sudut membulat */
+    --border-radius: 10px;
     --padding-start: 12px;
     --inner-padding-end: 12px;
     margin: 0;
@@ -107,7 +95,6 @@
     cursor: pointer;
   }
 
-  /* Status Aktif / Chat yang sedang dipilih */
   .history-item.active {
     --background: rgba(0, 0, 0, 0.05) !important;
   }
@@ -161,11 +148,87 @@
     margin: 0;
   }
 
+  /* --- USER AUTH FOOTER STYLE (NEW) --- */
+  .minimalist-menu-footer {
+    background: #fafafa;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 12px 14px;
+  }
+
+  .auth-footer-container {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .login-google-btn-full {
+    --border-radius: 10px;
+    --background: #ffffff;
+    --color: #2d3748;
+    --box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    font-weight: 500;
+    font-size: 0.85rem;
+    width: 100%;
+    margin: 0;
+  }
+
+  .user-profile-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 6px 10px;
+    background: rgba(0, 0, 0, 0.03);
+    border-radius: 12px;
+  }
+
+  .user-profile-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    overflow: hidden;
+  }
+
+  .user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .user-details {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .user-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #2d3748;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .user-email {
+    font-size: 0.7rem;
+    color: #718096;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .logout-btn {
+    --color: #e53e3e;
+    margin: 0;
+  }
 
   /* --- DARK MODE HARMONIZATION --- */
   @media (prefers-color-scheme: dark) {
     .minimalist-menu-header {
-      --background: #181818; /* Lebih gelap sedikit dibanding main content */
+      --background: #181818;
       border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
 
@@ -180,6 +243,28 @@
 
     .minimalist-menu-content {
       --background: #181818;
+    }
+
+    .minimalist-menu-footer {
+      background: #181818;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .login-google-btn-full {
+      --background: #2d3748;
+      --color: #f7fafc;
+    }
+
+    .user-profile-card {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .user-name {
+      color: #f7fafc;
+    }
+
+    .user-email {
+      color: #a0aec0;
     }
 
     .history-item {
