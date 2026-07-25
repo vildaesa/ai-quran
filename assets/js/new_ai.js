@@ -1,5 +1,5 @@
 (function(){
-  // ---------- FIREBASE CONFIGURATION & INITIALIZATION ----------
+  // ---------- KONFIGURASI FIREBASE AUTH ----------
   const firebaseConfig = {
     apiKey: "AIzaSyATyvdXXQHvJE6-EYiwXJ0jCZkvUBW-3c8",
     authDomain: "my-ai-quran.firebaseapp.com",
@@ -41,20 +41,21 @@
     if (user) {
       authContainer.innerHTML = `
         <div class="user-profile-card">
-          <div class="user-profile-info">
+          <a href="./user-profile.html" class="user-profile-info" style="text-decoration: none; color: inherit; cursor: pointer;">
             <img src="${user.photoURL || 'https://www.gravatar.com/avatar?d=mp'}" class="user-avatar" alt="User Profile" />
             <div class="user-details">
               <span class="user-name">${escapeHtml(user.displayName || 'Pengguna')}</span>
               <span class="user-email">${escapeHtml(user.email || '')}</span>
             </div>
-          </div>
+          </a>
           <ion-button fill="clear" size="small" id="google-logout-btn" class="logout-btn">
             <ion-icon name="log-out-outline" slot="icon-only"></ion-icon>
           </ion-button>
         </div>
       `;
 
-      document.getElementById('google-logout-btn')?.addEventListener('click', () => {
+      document.getElementById('google-logout-btn')?.addEventListener('click', (e) => {
+        e.stopPropagation();
         if (auth) {
           auth.signOut().then(() => {
             showAlert('Logout', 'Anda telah keluar dari akun Google.');
@@ -80,7 +81,7 @@
 
   async function loginWithGoogle() {
     if (!auth) {
-      await showAlert('Firebase Konfigurasi', 'Harap isi Kredensial Firebase API Key terlebih dahulu.');
+      await showAlert('Firebase Konfigurasi', 'Harap periksa kredensial Firebase SDK.');
       return;
     }
     const provider = new firebase.auth.GoogleAuthProvider();
@@ -360,14 +361,13 @@
     }
   }
 
-  // Helper Khusus: Render BUBBLE LOGIN AI jika user belum login
+  // BUBBLE LOGIN AI
   function renderRequireLoginBubble() {
     const currentConv = conversations.find(c => c.id === currentConversationId);
     if (!currentConv) return;
 
     const loginMessageText = `Anda belum login. Silakan login terlebih dahulu untuk menggunakan asisten AI.`;
-    
-    // Simpan di riwayat chat lokal
+
     currentConv.messages.push({
       id: generateId(),
       text: loginMessageText,
@@ -386,9 +386,9 @@
     bubbleDiv.style.borderLeft = '4px solid #4285F4';
 
     bubbleDiv.innerHTML = `
-      <p style="margin: 0 0 12px 0;">🔒 <strong>Akses Terbatas</strong></p>
-      <p style="margin: 0 0 16px 0;">${loginMessageText}</p>
-      <button class="google-login-native-btn" id="inline-chat-login-btn" style="max-width: 240px; margin-top: 8px;">
+      <p style="margin: 0 0 8px 0;">🔒 <strong>Akses Terbatas</strong></p>
+      <p style="margin: 0 0 14px 0;">${loginMessageText}</p>
+      <button class="google-login-native-btn" id="inline-chat-login-btn" style="max-width: 240px; margin-top: 4px;">
         <svg class="google-icon-svg" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
           <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -403,7 +403,6 @@
     messagesContainer.appendChild(wrapperDiv);
     scrollToBottom();
 
-    // Event handler tombol login di dalam bubble chat
     document.getElementById('inline-chat-login-btn')?.addEventListener('click', () => {
       loginWithGoogle();
     });
@@ -507,13 +506,14 @@
     return true;
   }
 
-  const API_BASE_URL = 'https://quran-ai.mvstream.workers.dev';
+  // LINK WORKER BACKEND TERKINI
+  const API_BASE_URL = 'https://ai-quran-backend.vildaesa.workers.dev';
 
   async function getAIResponse(userMessage) {
     if (isWaitingResponse) return;
     isWaitingResponse = true;
 
-    // 1. PENGECEKAN FRONTEND: JIKA BELUM LOGIN, TAMPILKAN BUBBLE + TOMBOL LOGIN
+    // VALIDASI LOGIN FRONTEND
     if (!currentUser) {
       isWaitingResponse = false;
       renderRequireLoginBubble();
