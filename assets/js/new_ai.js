@@ -2,12 +2,12 @@
   // ---------- FIREBASE CONFIGURATION & INITIALIZATION ----------
   // Isikan dengan kredensial Firebase Project milikmu
   const firebaseConfig = {
-    apiKey: "YOUR_FIREBASE_API_KEY",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyATyvdXXQHvJE6-EYiwXJ0jCZkvUBW-3c8",
+    authDomain: "my-ai-quran.firebaseapp.com",
+    projectId: "my-ai-quran",
+    storageBucket: "my-ai-quran.firebasestorage.app",
+    messagingSenderId: "1025965303376",
+    appId: "1:1025965303376:web:d2aa080d9f81b4fa699355"
   };
 
   let currentUser = null; // Menyimpan data user login Firebase
