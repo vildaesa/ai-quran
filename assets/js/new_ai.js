@@ -26,39 +26,44 @@
     }
   }
 
-  function updateAuthUI(user) {
-    const authContainer = document.getElementById('firebase-auth-container');
-    if (!authContainer) return;
+function updateAuthUI(user) {
+  const authContainer = document.getElementById('firebase-auth-container');
+  if (!authContainer) return;
 
-    if (user) {
-      // User Sedang Login
-      authContainer.innerHTML = `
-        <div class="user-profile-badge" style="display: flex; align-items: center; gap: 8px; padding: 4px 8px; background: rgba(0,0,0,0.05); border-radius: 20px;">
-          <img src="${user.photoURL || 'https://www.gravatar.com/avatar?d=mp'}" style="width: 28px; height: 28px; border-radius: 50%;" alt="Avatar" />
-          <span style="font-size: 0.85rem; font-weight: 500; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${user.displayName || user.email}</span>
-          <ion-button fill="clear" size="small" id="google-logout-btn" style="--color: #e53e3e; margin: 0; padding: 0;">
-            <ion-icon name="log-out-outline" slot="icon-only"></ion-icon>
-          </ion-button>
+  if (user) {
+    // 🟢 Tampilan ketika User SUDAH LOGIN
+    authContainer.innerHTML = `
+      <div class="user-profile-card">
+        <div class="user-profile-info">
+          <img src="${user.photoURL || 'https://www.gravatar.com/avatar?d=mp'}" class="user-avatar" alt="User Profile" />
+          <div class="user-details">
+            <span class="user-name">${escapeHtml(user.displayName || 'Pengguna')}</span>
+            <span class="user-email">${escapeHtml(user.email || '')}</span>
+          </div>
         </div>
-      `;
-
-      document.getElementById('google-logout-btn')?.addEventListener('click', () => {
-        auth.signOut().then(() => {
-          showAlert('Logout', 'Anda telah berhasil keluar dari akun Google.');
-        });
-      });
-    } else {
-      // User Belum Login
-      authContainer.innerHTML = `
-        <ion-button fill="solid" color="primary" size="small" id="google-login-btn" style="--border-radius: 20px;">
-          <ion-icon name="logo-google" slot="start"></ion-icon>
-          Masuk dengan Google
+        <ion-button fill="clear" size="small" id="google-logout-btn" class="logout-btn">
+          <ion-icon name="log-out-outline" slot="icon-only"></ion-icon>
         </ion-button>
-      `;
+      </div>
+    `;
 
-      document.getElementById('google-login-btn')?.addEventListener('click', loginWithGoogle);
-    }
+    document.getElementById('google-logout-btn')?.addEventListener('click', () => {
+      auth.signOut().then(() => {
+        showAlert('Logout', 'Anda telah berhasil keluar dari akun Google.');
+      });
+    });
+  } else {
+    // ⚪ Tampilan ketika User BELUM LOGIN
+    authContainer.innerHTML = `
+      <ion-button fill="outline" class="login-google-btn-full" id="google-login-btn">
+        <ion-icon name="logo-google" slot="start" style="color: #4285F4; margin-right: 8px;"></ion-icon>
+        Masuk dengan Google
+      </ion-button>
+    `;
+
+    document.getElementById('google-login-btn')?.addEventListener('click', loginWithGoogle);
   }
+}
 
   async function loginWithGoogle() {
     if (!auth) {
