@@ -40,7 +40,7 @@
 
     if (user) {
       authContainer.innerHTML = `
-        <div class="user-profile-card">
+<a href="./user-profile.html" class="user-profile-card" style="text-decoration: none;">
           <div class="user-profile-info">
             <img src="${user.photoURL || 'https://www.gravatar.com/avatar?d=mp'}" class="user-avatar" alt="User Profile" />
             <div class="user-details">
@@ -51,7 +51,7 @@
           <ion-button fill="clear" size="small" id="google-logout-btn" class="logout-btn">
             <ion-icon name="log-out-outline" slot="icon-only"></ion-icon>
           </ion-button>
-        </div>
+</a>
       `;
 
       document.getElementById('google-logout-btn')?.addEventListener('click', () => {
