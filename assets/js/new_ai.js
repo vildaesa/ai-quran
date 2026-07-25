@@ -458,7 +458,7 @@
     }));
 
     // INTEGRASI FIREBASE USER ID KEY
-    const activeUserId = currentUser ? currentUser.uid : 'guest_anon_user';
+    const activeUserId = currentUser ? currentUser.uid : 'anon_user';
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/chat`, {
