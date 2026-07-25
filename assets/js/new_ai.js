@@ -8,7 +8,7 @@
       authDomain: "{{ site.AUTH_DOMAIN }}",
       projectId: "{{ site.PROJECT_ID }}",
       storageBucket: "{{ site.STORAGE_BUCKET }}",
-      messagingSenderId: "{{ SENDER_ID }}",
+      messagingSenderId: "{{ site.SENDER_ID }}",
       appId: "{{ site.APP_ID }}"
   };
 
