@@ -11,6 +11,7 @@ plugins:
   - jekyll-feed
   - jekyll-sitemap
   - jekyll-seo-tag
+  - jekyll-dotenv
 
 CLIENT_ID: "<%= ENV['CLIENT_ID'] %>"
 # Firebase
