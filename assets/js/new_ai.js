@@ -40,7 +40,7 @@
 
     if (user) {
       authContainer.innerHTML = `
-<a href="./user-profile.html" class="user-profile-card" style="text-decoration: none;">
+<a href="./profile" class="user-profile-card" style="text-decoration: none;">
           <div class="user-profile-info">
             <img src="${user.photoURL || 'https://www.gravatar.com/avatar?d=mp'}" class="user-avatar" alt="User Profile" />
             <div class="user-details">
@@ -48,9 +48,6 @@
               <span class="user-email">${escapeHtml(user.email || '')}</span>
             </div>
           </div>
-          <ion-button fill="clear" size="small" id="google-logout-btn" class="logout-btn">
-            <ion-icon name="log-out-outline" slot="icon-only"></ion-icon>
-          </ion-button>
 </a>
       `;
 
