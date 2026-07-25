@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: "https://vildaesa.github.io/ai-quran/sitemap.xml"

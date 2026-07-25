@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="id_ID">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>AI Quran - Islamic Chat</title>
+<meta name="license" content="https://vildaesa.github.io">
+
+<!-- Dinamis Status Bar / Browser Chrome & Safari Theme Color (Menyesuaikan Gaya Flat Baru) -->
+<meta name="theme-color" content="#fdfdfd" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)">
+
+<link rel="apple-touch-icon" sizes="180x180" href="/ai-quran/assets/icon/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/ai-quran/assets/icon/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/ai-quran/assets/icon/favicon-16x16.png">
+<link rel="manifest" href="/ai-quran/assets/icon/site.webmanifest">
+<!-- SEO Meta Tags -->
+<meta name="description" content="Islamic AI Assistant for Quran and Prayer guidance.">
+<meta name="keywords" content="AI Quran, Islamic Assistant, Prayer Guide, Sholat, Quran">
+<meta name="author" content="vildaesa">
+<meta name="language" content="id_ID">
+<meta name="robots" content="index, follow">
+<meta name="revisit-after" content="7 days">
+
+<!-- Open Graph Meta Tags (Social Media Sharing) -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="AI Quran - Islamic Chat">
+<meta property="og:description" content="Islamic AI Assistant for Quran and Prayer guidance.">
+<meta property="og:image" content="https://vildaesa.github.io/ai-quran/assets/images/og-image.png">
+<meta property="og:url" content="https://vildaesa.github.io/ai-quran/">
+<meta property="og:site_name" content="AI Quran & Sholat Assistant">
+
+<!-- Twitter Card Meta Tags -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="AI Quran - Islamic Chat">
+<meta name="twitter:description" content="Islamic AI Assistant for Quran and Prayer guidance.">
+<meta name="twitter:image" content="https://vildaesa.github.io/ai-quran/assets/images/og-image.png">
+<!-- Begin Jekyll SEO tag v2.9.0 -->
+<title>AI Quran - Islamic Chat | AI Quran &amp; Sholat Assistant</title>
+<meta name="generator" content="Jekyll v4.3.4" />
+<meta property="og:title" content="AI Quran - Islamic Chat" />
+<meta property="og:locale" content="id_ID" />
+<meta name="description" content="Islamic AI Assistant for Quran and Prayer guidance." />
+<meta name="twitter:description" property="og:description" content="Islamic AI Assistant for Quran and Prayer guidance." />
+<link rel="canonical" href="https://vildaesa.github.io/ai-quran/" />
+<meta property="og:url" content="https://vildaesa.github.io/ai-quran/" />
+<meta property="og:site_name" content="AI Quran &amp; Sholat Assistant" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="AI Quran - Islamic Chat" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","description":"Islamic AI Assistant for Quran and Prayer guidance.","headline":"AI Quran - Islamic Chat","name":"AI Quran &amp; Sholat Assistant","url":"https://vildaesa.github.io/ai-quran/"}</script>
+<!-- End Jekyll SEO tag -->
+
+
+<!-- Canonical URL -->
+<link rel="canonical" href="https://vildaesa.github.io/ai-quran/">
+
+<!-- Favicon -->
+<link rel="icon" type="image/png" href="/ai-quran/favicon.ico">
+
+<!-- Ionic Core 8 CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ionic/core@8/css/ionic.bundle.css" />
+
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&family=Noto+Naskh+Arabic:wght@400..700&display=swap" rel="stylesheet">
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+<!-- Custom Styles -->
+<link rel="stylesheet" href="/ai-quran/assets/css/style.css">
+
+  
+  <style>
+    /* --- OPTIMASI KINERJA LAYOUT --- */
+    
+    ion-split-pane {
+      will-change: transform;
+    }
+
+    body {
+      overscroll-behavior-y: contain;
+      background: #fdfdfd;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: #121212;
+      }
+    }
+  </style>
+</head>
+<body>
+  <ion-app>
+    <!-- 
+      Layout Split Pane dengan penargetan konten utama. 
+      when="md" memastikan sidebar otomatis mengambang (floating/drawer) di ponsel, 
+      dan melekat secara permanen di tablet/desktop.
+    -->
+    <ion-split-pane content-id="main-content" when="md">
+      <ion-menu side="start" menu-id="chatHistoryMenu" content-id="main-content" swipeGesture="true" class="minimalist-menu">
+
+  <ion-header class="ion-no-border minimalist-menu-header">
+    <ion-toolbar class="minimalist-menu-toolbar">
+      <ion-title class="minimalist-menu-title">Riwayat Chat</ion-title>
+      <ion-buttons slot="end">
+        <ion-button id="new-chat-btn" fill="clear" class="new-chat-button">
+          <ion-icon slot="icon-only" name="add-outline"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+    </ion-toolbar>
+  </ion-header>
+
+  <ion-content class="minimalist-menu-content">
+    <ion-list id="conversation-list" lines="none" class="minimalist-conversation-list">
+
+      <!-- Loading State -->
+      <div class="menu-loading-container" id="menu-loading-placeholder">
+        <ion-spinner name="crescent" class="custom-spinner"></ion-spinner>
+        <p>Memuat riwayat...</p>
+      </div>
+
+    </ion-list>
+  </ion-content>
+
+  <!-- FOOTER AUTHENTICATION (GOOGLE LOGIN) -->
+  <ion-footer class="ion-no-border minimalist-menu-footer">
+    <div id="firebase-auth-container" class="auth-footer-container">
+      <!-- Fallback tombol login jika JS terlambat dimuat -->
+      <button class="google-login-native-btn" id="fallback-google-btn">
+        <svg class="google-icon-svg" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+        </svg>
+        <span>Masuk dengan Google</span>
+      </button>
+    </div>
+  </ion-footer>
+
+</ion-menu>
+
+<style>
+  /* --- BASE MENU & TOOLBAR STYLE --- */
+  .minimalist-menu {
+    --width: 280px;
+  }
+
+  .minimalist-menu-header {
+    --background: #fafafa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .minimalist-menu-toolbar {
+    --background: transparent;
+    --border-style: none;
+    --padding-start: 16px;
+    --padding-end: 12px;
+    --min-height: 56px;
+  }
+
+  .minimalist-menu-title {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #4a5568;
+  }
+
+  /* --- NEW CHAT BUTTON --- */
+  .new-chat-button {
+    --color: #1a202c;
+    --background-hover: rgba(0, 0, 0, 0.05);
+    --border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    margin: 0;
+    transition: all 0.2s ease;
+  }
+
+  /* --- MENU CONTENT & LISTS --- */
+  .minimalist-menu-content {
+    --background: #fafafa;
+  }
+
+  .minimalist-conversation-list {
+    background: transparent !important;
+    padding: 12px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  /* --- MODERN HISTORY ITEM STYLE --- */
+  .history-item {
+    --background: transparent;
+    --background-hover: rgba(0, 0, 0, 0.03) !important;
+    --border-radius: 10px;
+    --padding-start: 12px;
+    --inner-padding-end: 12px;
+    margin: 0;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .history-item.active {
+    --background: rgba(0, 0, 0, 0.05) !important;
+  }
+
+  .history-icon {
+    font-size: 18px;
+    color: #718096;
+    margin-inline-end: 12px !important;
+  }
+
+  .history-item.active .history-icon {
+    color: #1a202c;
+  }
+
+  .history-label h2 {
+    font-size: 0.88rem !important;
+    font-weight: 500 !important;
+    color: #2d3748 !important;
+    margin-bottom: 2px !important;
+  }
+
+  .history-item.active .history-label h2 {
+    font-weight: 600 !important;
+    color: #1a202c !important;
+  }
+
+  .history-label p {
+    font-size: 0.72rem !important;
+    color: #a0aec0 !important;
+  }
+
+  /* --- CLEAN LOADING STATE --- */
+  .menu-loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 16px;
+    gap: 12px;
+  }
+
+  .custom-spinner {
+    --color: #718096;
+    width: 24px;
+    height: 24px;
+  }
+
+  .menu-loading-container p {
+    font-size: 0.8rem;
+    color: #718096;
+    margin: 0;
+  }
+
+  /* --- USER AUTH FOOTER STYLE (FIXED & GUARANTEED VISIBLE) --- */
+  .minimalist-menu-footer {
+    background: #fafafa;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    padding: 12px 14px;
+    z-index: 999;
+    position: relative;
+    display: block !important;
+  }
+
+  .auth-footer-container {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+  }
+
+  /* Native Google Button Styling */
+  .google-login-native-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 16px;
+    background: #ffffff;
+    border: 1px solid #cbd5e0;
+    border-radius: 10px;
+    color: #2d3748;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+  }
+
+  .google-login-native-btn:hover {
+    background: #f7fafc;
+    border-color: #a0aec0;
+  }
+
+  .google-icon-svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  .user-profile-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 8px 10px;
+    background: rgba(0, 0, 0, 0.04);
+    border-radius: 12px;
+  }
+
+  .user-profile-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    overflow: hidden;
+  }
+
+  .user-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  .user-details {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .user-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #2d3748;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .user-email {
+    font-size: 0.7rem;
+    color: #718096;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .logout-btn {
+    --color: #e53e3e;
+    margin: 0;
+  }
+
+  /* --- DARK MODE HARMONIZATION --- */
+  @media (prefers-color-scheme: dark) {
+    .minimalist-menu-header {
+      --background: #181818;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .minimalist-menu-title {
+      color: #a0aec0;
+    }
+
+    .new-chat-button {
+      --color: #f7fafc;
+      --background-hover: rgba(255, 255, 255, 0.06);
+    }
+
+    .minimalist-menu-content {
+      --background: #181818;
+    }
+
+    .minimalist-menu-footer {
+      background: #181818;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .google-login-native-btn {
+      background: #2d3748;
+      border-color: #4a5568;
+      color: #f7fafc;
+    }
+
+    .google-login-native-btn:hover {
+      background: #3a4a5e;
+    }
+
+    .user-profile-card {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .user-name {
+      color: #f7fafc;
+    }
+
+    .user-email {
+      color: #a0aec0;
+    }
+
+    .history-item {
+      --background-hover: rgba(255, 255, 255, 0.02) !important;
+    }
+
+    .history-item.active {
+      --background: rgba(255, 255, 255, 0.06) !important;
+    }
+
+    .history-icon {
+      color: #718096;
+    }
+
+    .history-item.active .history-icon {
+      color: #f7fafc;
+    }
+
+    .history-label h2 {
+      color: #cbd5e0 !important;
+    }
+
+    .history-item.active .history-label h2 {
+      color: #ffffff !important;
+    }
+
+    .history-label p {
+      color: #718096 !important;
+    }
+
+    .custom-spinner {
+      --color: #a0aec0;
+    }
+
+    .menu-loading-container p {
+      color: #a0aec0;
+    }
+  }
+</style>
+
+
+      <!-- CONTENT UTAMA CHAT -->
+      <div class="ion-page" id="main-content">
+        <ion-header class="ion-no-border minimalist-header">
+  <ion-toolbar class="minimalist-toolbar">
+    <ion-buttons slot="start">
+      <ion-menu-button menu="chatHistoryMenu" class="minimalist-btn"></ion-menu-button>
+    </ion-buttons>
+    
+    <ion-title id="chat-title" class="minimalist-title">AI Quran - Islamic Chat</ion-title>
+    
+    <ion-buttons slot="end">
+      <!-- Tombol Buka Al-Quran Digital -->
+      <ion-button id="open-quran-btn" fill="clear" class="minimalist-btn-quran">
+        <ion-icon slot="icon-only" name="book-outline"></ion-icon>
+      </ion-button>
+      
+      <ion-button id="clear-current-chat-btn" fill="clear" class="minimalist-btn-danger">
+        <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<!-- MODAL AL-QURAN DIGITAL -->
+<ion-modal id="quran-modal" trigger="open-quran-btn">
+  <ion-header class="ion-no-border quran-modal-header">
+    <ion-toolbar class="minimalist-toolbar">
+      <ion-buttons slot="start">
+        <ion-button id="quran-back-btn" fill="clear" class="quran-back-button" style="display: none;">
+          <ion-icon slot="icon-only" name="arrow-back-outline"></ion-icon>
+        </ion-button>
+        <ion-button id="close-quran-btn" fill="clear" class="quran-close-btn">
+          <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+      
+      <ion-title id="quran-modal-title" class="minimalist-title">Al-Quran Digital</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <ion-content class="quran-modal-content">
+    
+    <!-- VIEW 1: DAFTAR BUKU SURAH (GRID CARDS) -->
+    <div id="quran-book-view" class="quran-book-wrapper">
+      <div class="quran-book-header">
+        <h3>Indeks Surah</h3>
+        <p>Silakan ketuk salah satu surah untuk mulai membaca mushaf</p>
+      </div>
+      
+      <div id="quran-surah-grid" class="quran-surah-grid">
+        <div class="menu-loading-container" style="grid-column: 1/-1; padding: 60px 0;">
+          <ion-spinner name="crescent" class="custom-spinner"></ion-spinner>
+          <p style="margin-top: 12px; color: #718096;">Membuka lembaran mushaf...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 2: HALAMAN BACAAN AYAT -->
+    <div id="quran-reading-view" class="quran-reading-wrapper" style="display: none;">
+      <div id="quran-verses-container" class="quran-verses-wrapper">
+        <!-- Ayat suci akan dirender di sini oleh JS -->
+      </div>
+    </div>
+
+  </ion-content>
+
+<ion-footer id="quran-modal-footer" class="ion-no-border quran-mini-player-footer" style="display: none;">
+  <div class="mini-player-container">
+    <div class="mini-player-info">
+      <span id="player-current-ayah" class="mini-player-subtext">Ketuk tombol putar...</span>
+    </div>
+
+    <div class="mini-player-controls">
+      <ion-button fill="clear" id="quran-prev-btn" class="mini-control-btn">
+        <ion-icon name="play-back-outline" slot="icon-only" class="force-visible"></ion-icon>
+      </ion-button>
+
+      <ion-button fill="clear" id="quran-play-all-btn" class="mini-control-btn play-main-btn">
+        <ion-icon name="play-outline" id="play-all-icon" slot="icon-only" class="force-visible"></ion-icon>
+      </ion-button>
+
+      <ion-button fill="clear" id="quran-stop-btn" class="mini-control-btn stop-main-btn" style="display: none;">
+        <ion-icon name="stop-outline" slot="icon-only" class="force-visible"></ion-icon>
+      </ion-button>
+
+      <ion-button fill="clear" id="quran-next-btn" class="mini-control-btn">
+        <ion-icon name="play-forward-outline" slot="icon-only" class="force-visible"></ion-icon>
+      </ion-button>
+    </div>
+  </div>
+</ion-footer>
+</ion-modal>
+
+<style>
+  /* --- GAYA MINIMALIS MODERN (LIGHT MODE) --- */
+  /* Force Visibility Fix */
+  .force-visible {
+    visibility: visible !important;
+    display: block !important;
+    opacity: 1 !important;
+    contain: none !important;
+  }
+
+  .mini-control-btn {
+    --color: #2b6cb0;
+    --background: transparent;
+    --border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    margin: 0 4px;
+    /* Memastikan tombol tidak tersembunyi */
+    visibility: visible !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Hilangkan override tema yang mungkin menyembunyikan ikon */
+  .mini-control-btn ion-icon {
+    font-size: 24px !important;
+    pointer-events: none;
+  }
+  .minimalist-header {
+    --background: #ffffff;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06); 
+  }
+
+  .minimalist-toolbar {
+    --background: transparent;
+    --border-style: none;
+    --padding-start: 12px;
+    --padding-end: 12px;
+    --min-height: 56px;
+  }
+
+  .minimalist-title {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    color: #1a202c;
+  }
+
+  .minimalist-btn {
+    --color: #4a5568;
+    --background-hover: rgba(0, 0, 0, 0.04);
+    --border-radius: 8px;
+    margin: 4px;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .minimalist-btn-quran {
+    --color: #2b6cb0;
+    --background-hover: rgba(43, 108, 176, 0.06);
+    --border-radius: 8px;
+    margin: 4px;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .minimalist-btn-danger {
+    --color: #e53e3e;
+    --background-hover: rgba(229, 62, 62, 0.06);
+    --border-radius: 8px;
+    margin: 4px;
+    transition: all 0.2s ease-in-out;
+  }
+
+  /* --- STYLING MODAL AL-QURAN (FULLSCREEN PREMIUM) --- */
+  #quran-modal {
+    --height: 100%;
+    --width: 100%;
+    --max-width: 760px;
+    --border-radius: 16px 16px 0 0;
+  }
+
+  .quran-modal-header {
+    --background: #f7fafc;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .quran-close-btn, .quran-back-button {
+    --color: #4a5568;
+    --background-hover: rgba(0, 0, 0, 0.04);
+    --border-radius: 50%;
+  }
+
+  .quran-modal-content {
+    --background: #ffffff;
+  }
+
+  /* INDEKS BUKU SURAH */
+  .quran-book-wrapper {
+    padding: 24px 20px;
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .quran-book-header {
+    margin-bottom: 24px;
+  }
+
+  .quran-book-header h3 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #1a202c;
+    margin: 0 0 4px 0;
+    letter-spacing: -0.02em;
+  }
+
+  .quran-book-header p {
+    font-size: 0.9rem;
+    color: #718096;
+    margin: 0;
+  }
+
+  /* Grid Buku */
+  .quran-surah-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+  }
+
+  /* Tampilan halaman bacaan */
+  .quran-reading-wrapper {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .quran-verses-wrapper {
+    padding: 24px 20px 100px 20px;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  /* --- ANIMATIONS --- */
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* --- DARK MODE --- */
+  @media (prefers-color-scheme: dark) {
+    .minimalist-header {
+      --background: #121212;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08); 
+    }
+    
+    .minimalist-title {
+      color: #f7fafc;
+    }
+    
+    .minimalist-btn {
+      --color: #a0aec0;
+      --background-hover: rgba(255, 255, 255, 0.05);
+    }
+
+    .minimalist-btn-quran {
+      --color: #63b3ed;
+      --background-hover: rgba(99, 179, 237, 0.08);
+    }
+    
+    .minimalist-btn-danger {
+      --color: #feb2b2;
+      --background-hover: rgba(254, 178, 178, 0.1);
+    }
+
+    .quran-modal-header {
+      --background: #1a1a1a;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .quran-close-btn, .quran-back-button {
+      --color: #a0aec0;
+    }
+
+    .quran-modal-content {
+      --background: #121212;
+    }
+
+    .quran-book-header h3 {
+      color: #f7fafc;
+    }
+
+    .quran-book-header p {
+      color: #a0aec0;
+    }
+  }
+</style>
+
+
+<ion-content id="chat-content" scroll-events="true" class="minimalist-content">
+    
+    <!-- Empty Chat Placeholder -->
+    <div class="empty-chat-wrapper" id="empty-chat-placeholder">
+      <div class="empty-chat-icon-container">
+        <ion-icon name="chatbubbles-outline"></ion-icon>
+      </div>
+      <h3 class="empty-chat-title">ٱلسَّلَامُ عَلَيْكُمْ وَرَحْمَةُ ٱللَّٰهِ وَبَرَكَاتُهُ</h3>
+      <p class="empty-chat-subtitle"  id="empty-chat-subtitle-text">Selamat pagi/siang/sore/malam.<br>sekarang pukul 00:00 WIB<br>Ada yang bisa saya bantu tentang Al-Quran?</p>
+    </div>
+
+  <div class="chat-container" id="messages-container">
+  </div>
+
+  <!-- Typing Indicator (Muncul secara dinamis) -->
+  <div class="typing-indicator-container" id="typing-indicator" style="display: none;">
+    <div class="typing-bubble">
+      <span class="typing-dot"></span>
+      <span class="typing-dot"></span>
+      <span class="typing-dot"></span>
+    </div>
+  </div>
+</ion-content>
+
+<style>
+  /* --- BASE CONTENT STYLING --- */
+  .minimalist-content {
+    --background: #fdfdfd;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  .chat-container {
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 800px;
+    margin: 0 auto;
+    min-height: 100%; 
+    box-sizing: border-box;
+  }
+
+  /* --- EMPTY STATE STYLE (MINIMALIST) --- */
+  .empty-chat-wrapper {
+    width: 100vw;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 24px;
+    animation: fadeIn 0.4s ease-out;
+  }
+
+  .empty-chat-icon-container {
+    background-color: rgba(0, 0, 0, 0.03);
+    padding: 20px;
+    border-radius: 50%;
+    margin-bottom: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .empty-chat-icon-container ion-icon {
+    font-size: 36px;
+    color: #a0aec0; /* Abu-abu netral lembut */
+  }
+
+  .empty-chat-title {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0 0 8px 0;
+    letter-spacing: -0.01em;
+  }
+
+  .empty-chat-subtitle {
+    font-size: 0.9rem;
+    color: #718096;
+    line-height: 1.5;
+    margin: 0;
+    max-width: 280px;
+  }
+
+  /* --- CHAT BUBBLE SYSTEM (PREMIUM LOOK) --- */
+  .message-wrapper {
+    display: flex;
+    width: 100%;
+    margin-bottom: 4px;
+    animation: slideUp 0.25s ease-out;
+  }
+
+  .message-wrapper.user {
+    justify-content: flex-end;
+  }
+
+  .message-wrapper.ai {
+    justify-content: flex-start;
+  }
+
+  .message-bubble {
+    max-width: 75%;
+    padding: 12px 16px;
+    font-size: 0.95rem;
+    line-height: 1.45;
+  }
+
+  /* Balon Chat User: Sudut kanan bawah tajam */
+  .message-wrapper.user .message-bubble {
+    background-color: #1a202c; /* Hitam arang */
+    color: #ffffff;
+    border-radius: 18px 18px 4px 18px;
+  }
+
+  /* Balon Chat AI: Sudut kiri bawah tajam */
+  .message-wrapper.ai .message-bubble {
+    background-color: #f1f3f5; /* Abu terang */
+    color: #1a202c;
+    border-radius: 18px 18px 18px 4px;
+  }
+
+  /* --- TYPING INDICATOR (PREMIUM DOTS) --- */
+  .typing-indicator-container {
+    padding: 0 16px 16px 16px;
+    display: flex;
+    justify-content: flex-start;
+    max-width: 800px;
+    margin: 0;
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  .typing-bubble {
+    background-color: #f1f3f5;
+    padding: 12px 18px;
+    border-radius: 18px 18px 18px 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .typing-dot {
+    width: 6px;
+    height: 6px;
+    background-color: #a0aec0;
+    border-radius: 50%;
+    display: inline-block;
+    animation: typingBounce 1.4s infinite ease-in-out both;
+  }
+
+  .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+  .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+  /* --- ANIMATIONS --- */
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes typingBounce {
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1.0); }
+  }
+
+  /* --- DARK MODE SUPPORT --- */
+  @media (prefers-color-scheme: dark) {
+    .minimalist-content {
+      --background: #121212;
+    }
+
+    .empty-chat-icon-container {
+      background-color: rgba(255, 255, 255, 0.03);
+    }
+
+    .empty-chat-icon-container ion-icon {
+      color: #718096;
+    }
+
+    .empty-chat-title {
+      color: #f7fafc;
+    }
+
+    .empty-chat-subtitle {
+      color: #a0aec0;
+    }
+
+    /* Balon chat saat mode gelap */
+    .message-wrapper.user .message-bubble {
+      background-color: #f7fafc; /* User pakai warna putih terang */
+      color: #121212;
+    }
+
+    .message-wrapper.ai .message-bubble, .typing-bubble {
+      background-color: #1e1e1e; /* AI pakai abu sangat gelap */
+      color: #e2e8f0;
+    }
+
+    .typing-dot {
+      background-color: #718096;
+    }
+  }
+</style>
+
+
+<ion-footer class="ion-no-border minimalist-footer">
+  <ion-toolbar class="minimalist-footer-toolbar">
+    <div class="input-wrapper-container">
+      
+      <!-- Input Box -->
+      <ion-input 
+        id="message-input" 
+        placeholder="Tanya apa saja ke AI..." 
+        value="" 
+        autocomplete="off"
+        class="minimalist-input-field">
+      </ion-input>
+
+      <!-- Tombol Kirim -->
+      <ion-buttons class="minimalist-send-buttons-group">
+        <ion-button id="send-message-btn" class="minimalist-send-btn" fill="clear">
+          <ion-icon name="arrow-up-outline" slot="icon-only"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+
+    </div>
+  </ion-toolbar>
+</ion-footer>
+
+<style>
+  /* --- BASE FOOTER STYLE --- */
+  .minimalist-footer {
+    --background: #fdfdfd; /* Selaras dengan background ion-content */
+    background: #fdfdfd;
+    padding-bottom: env(safe-area-inset-bottom, 12px); /* Mengatasi gap navigasi OS modern */
+  }
+
+  .minimalist-footer-toolbar {
+    --background: transparent;
+    --border-style: none;
+    --padding-start: 16px;
+    --padding-end: 16px;
+    --padding-top: 8px;
+    --padding-bottom: 8px;
+  }
+
+  /* --- INPUT WRAPPER CONTAINER (FLOATING CAPSULE) --- */
+  .input-wrapper-container {
+    display: flex;
+    align-items: center;
+    background-color: #f1f3f5; /* Background abu-abu halus */
+    border-radius: 24px; /* Membuat bentuk kapsul */
+    padding: 4px 6px 4px 16px;
+    width: 100%;
+    max-width: 800px; /* Batas lebar agar konsisten dengan bubble chat */
+    margin: 0 auto;
+    border: 1px solid transparent;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Efek ketika input sedang aktif/fokus */
+  .input-wrapper-container:focus-within {
+    background-color: #ffffff;
+    border-color: rgba(0, 0, 0, 0.12);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03); /* Soft shadow tipis saat mengetik */
+  }
+
+  /* --- CUSTOM ION INPUT --- */
+  .minimalist-input-field {
+    --highlight-height: 0px !important;
+    --padding-start: 0px !important;
+    --padding-end: 8px !important;
+    --padding-top: 10px !important;
+    --padding-bottom: 10px !important;
+    font-size: 0.95rem;
+    color: #1a202c;
+    --placeholder-color: #718096;
+    --placeholder-opacity: 0.7;
+    margin: 0;
+  }
+
+  /* --- MINIMALIST CIRCULAR SEND BUTTON --- */
+  .minimalist-send-btn {
+    --color: #ffffff; /* Ikon putih */
+    --background: #1a202c; /* Background hitam gelap */
+    --background-hover: #2d3748;
+    --background-activated: #000000;
+    --border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    margin: 0;
+    transition: all 0.2s ease-in-out;
+  }
+
+  /* Mengganti ikon send standard dengan 'arrow-up' yang lebih estetik ala ChatGPT/iOS */
+  .minimalist-send-btn ion-icon {
+    font-size: 18px;
+    font-weight: bold;
+  }
+
+
+  /* --- DARK MODE ADJUSTMENTS --- */
+  @media (prefers-color-scheme: dark) {
+    .minimalist-footer {
+      --background: #121212;
+      background: #121212;
+    }
+
+    .input-wrapper-container {
+      background-color: #1e1e1e; /* Senada dengan bubble chat AI */
+    }
+
+    .input-wrapper-container:focus-within {
+      background-color: #1a1a1a;
+      border-color: rgba(255, 255, 255, 0.1);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+      --highlight-height: 0px !important;
+    }
+
+    .minimalist-input-field {
+      color: #f7fafc;
+      --placeholder-color: #718096;
+    }
+
+    .minimalist-send-btn {
+      --color: #121212; /* Ikon gelap */
+      --background: #f7fafc; /* Tombol putih terang agar kontras */
+      --background-hover: #e2e8f0;
+      --background-activated: #ffffff;
+    }
+  }
+</style>
+
+
+<!-- Scroll to top FAB -->
+
+<ion-fab id="scroll-top-fab" class="minimalist-scroll-top" vertical="bottom" horizontal="end" slot="fixed" style="display: none;">
+  <ion-fab-button size="small" id="scroll-top-btn" class="minimalist-fab-button">
+    <ion-icon name="chevron-up-outline"></ion-icon>
+  </ion-fab-button>
+</ion-fab>
+
+<style>
+  /* --- CUSTOM FAB POSITIONING --- */
+  .minimalist-scroll-top {
+    /* Digeser sedikit lebih tinggi agar tidak menutupi area input footer */
+    bottom: calc(env(safe-area-inset-bottom, 12px) + 72px) !important;
+    right: 20px !important;
+    transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* --- MODERN FROSTED GLASS BUTTON --- */
+  .minimalist-fab-button {
+    /* Membuat latar belakang transparan ber-blur */
+    --background: rgba(255, 255, 255, 0.85); 
+    --background-hover: rgba(255, 255, 255, 0.95);
+    --background-activated: #ffffff;
+    --color: #1a202c; /* Warna ikon gelap netral */
+    
+    /* Bayangan tipis premium (soft shadow) */
+    --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); 
+    
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 50%;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: all 0.2s ease-in-out;
+  }
+
+  /* Mengganti ke 'chevron-up' yang terasa lebih ringan & modern ketimbang 'arrow-up' */
+  .minimalist-fab-button ion-icon {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  /* Efek interaktif hover mikro */
+  .minimalist-fab-button:hover {
+    transform: translateY(-2px);
+    --box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+  }
+
+
+  /* --- DARK MODE ADJUSTMENTS --- */
+  @media (prefers-color-scheme: dark) {
+    .minimalist-fab-button {
+      --background: rgba(30, 30, 30, 0.8); /* Gelap transparan */
+      --background-hover: rgba(45, 45, 45, 0.9);
+      --background-activated: #1e1e1e;
+      --color: #f7fafc; /* Ikon putih terang */
+      --box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .minimalist-fab-button:hover {
+      --box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    }
+  }
+</style>
+
+
+      </div>
+    </ion-split-pane>
+  </ion-app>
+
+  <!-- IONIC CORE & IONICONS CDN -->
+<script type="module" src="https://cdn.jsdelivr.net/npm/@ionic/core@8/dist/ionic/ionic.esm.js"></script>
+<script nomodule src="https://cdn.jsdelivr.net/npm/@ionic/core@8/dist/ionic/ionic.js"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/ionicons@7/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://cdn.jsdelivr.net/npm/ionicons@7/dist/ionicons/ionicons.js"></script>
+
+<!-- Marked.js for Markdown parsing -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+<!-- Custom App Logic -->
+<script src="/ai-quran/assets/js/new_ai.js"></script>
+
+</body>
+</html>
