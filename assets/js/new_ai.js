@@ -458,7 +458,7 @@
     return true;
   }
 
-  const API_BASE_URL = 'https://ai-quran-backend.vildaesa.workers.dev/';
+  const API_BASE_URL = 'https://ai-quran-backend.vildaesa.workers.dev';
 
   async function getAIResponse(userMessage) {
     if (isWaitingResponse) return;
