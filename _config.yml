@@ -30,6 +30,7 @@ exclude:
   - .jekyll-cache/
   - gemfiles/
   - Gemfile.lock
+  - sample.env
   - node_modules/
   - vendor/bundle/
   - vendor/cache/
