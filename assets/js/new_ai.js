@@ -1,12 +1,15 @@
+---
+---
+
 (function(){
   // ---------- KONFIGURASI FIREBASE AUTH ----------
   const firebaseConfig = {
-    apiKey: "AIzaSyATyvdXXQHvJE6-EYiwXJ0jCZkvUBW-3c8",
-    authDomain: "my-ai-quran.firebaseapp.com",
-    projectId: "my-ai-quran",
-    storageBucket: "my-ai-quran.firebasestorage.app",
-    messagingSenderId: "1025965303376",
-    appId: "1:1025965303376:web:d2aa080d9f81b4fa699355"
+      apiKey: "{{ site.API_KEY }}",
+      authDomain: "{{ site.AUTH_DOMAIN }}",
+      projectId: "{{ site.PROJECT_ID }}",
+      storageBucket: "{{ site.STORAGE_BUCKET }}",
+      messagingSenderId: "{{ SENDER_ID }}",
+      appId: "{{ site.APP_ID }}"
   };
 
   let currentUser = null; 
