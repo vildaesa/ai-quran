@@ -91,7 +91,7 @@
     if (user) {
       authContainer.innerHTML = `
         <div class="user-profile-card">
-          <a href="./user-profile.html" class="user-profile-info" style="text-decoration: none; color: inherit; cursor: pointer;">
+          <a href="./profile" class="user-profile-info" style="text-decoration: none; color: inherit; cursor: pointer;">
             <img src="${user.photoURL || 'https://www.gravatar.com/avatar?d=mp'}" class="user-avatar" alt="User Profile" />
             <div class="user-details">
               <span class="user-name">${escapeHtml(user.displayName || 'Pengguna')}</span>
