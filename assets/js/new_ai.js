@@ -1,6 +1,5 @@
 (function(){
   // ---------- FIREBASE CONFIGURATION & INITIALIZATION ----------
-  // Isikan dengan kredensial Firebase Project milikmu
   const firebaseConfig = {
     apiKey: "AIzaSyATyvdXXQHvJE6-EYiwXJ0jCZkvUBW-3c8",
     authDomain: "my-ai-quran.firebaseapp.com",
@@ -14,7 +13,6 @@
   let auth = null;
 
   function initFirebase() {
-    // Render tombol secara langsung tanpa menunggu Firebase
     updateAuthUI(null);
 
     if (window.firebase) {
@@ -24,7 +22,6 @@
         }
         auth = firebase.auth();
 
-        // Subskripsi status login
         auth.onAuthStateChanged((user) => {
           currentUser = user;
           updateAuthUI(user);
@@ -42,7 +39,6 @@
     if (!authContainer) return;
 
     if (user) {
-      // User Sedang Login
       authContainer.innerHTML = `
         <div class="user-profile-card">
           <div class="user-profile-info">
@@ -66,7 +62,6 @@
         }
       });
     } else {
-      // User Belum Login
       authContainer.innerHTML = `
         <button class="google-login-native-btn" id="google-login-btn">
           <svg class="google-icon-svg" viewBox="0 0 24 24">
@@ -463,7 +458,7 @@
     return true;
   }
 
-  const API_BASE_URL = 'https://quran-ai.mvstream.workers.dev';
+  const API_BASE_URL = 'https://ai-quran-backend.vildaesa.workers.dev/';
 
   async function getAIResponse(userMessage) {
     if (isWaitingResponse) return;
@@ -478,7 +473,7 @@
       content: m.text
     }));
 
-    const activeUserId = currentUser ? currentUser.uid : 'guest_anon_user';
+    const activeUserId = currentUser ? currentUser.uid : 'anon_user';
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/chat`, {
@@ -495,15 +490,15 @@
 
       if (!response.ok) {
         let errorText = 'Terjadi kendala pada server backend.';
-        if (response.status === 402) {
-          errorText = 'Saldo token Anda telah habis! Silakan lakukan top-up saldo token akun Google Anda.';
-        } else {
-          try {
-            const errData = await response.json();
-            if (errData && errData.error) {
-              errorText = `Error Backend: ${errData.error}`;
-            }
-          } catch(e) {}
+        try {
+          const errData = await response.json();
+          if (errData && errData.error) {
+            errorText = errData.error;
+          }
+        } catch(e) {
+          if (response.status === 402) {
+            errorText = `Saldo token untuk ID Akun (${activeUserId}) tidak mencukupi atau bernilai 0. Silakan isi saldo token akun ini terlebih dahulu.`;
+          }
         }
         throw new Error(errorText);
       }
@@ -600,7 +595,7 @@
     } catch (error) {
       console.error('Error:', error);
       removeTypingIndicator();
-      addMessageToCurrent('ai', `Maaf Bro, ada kendala:\n\n${error.message || error}`);
+      addMessageToCurrent('ai', `⚠️ ${error.message || error}`);
       aiMessageElement = null;
     } finally {
       isWaitingResponse = false;
@@ -725,7 +720,6 @@
     scrollTopFab = document.getElementById('scroll-top-fab');
     chatTitleEl = document.getElementById('chat-title');
 
-    // Inisialisasi Firebase Auth & UI
     initFirebase();
 
     loadFromLocalStorage();
