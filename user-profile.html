@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profil & Billing Token - Quran AI</title>
+
+  <!-- Ionic Framework CDN -->
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.esm.js"></script>
+  <script nomodule src="https://cdn.jsdelivr.net/npm/@ionic/core/dist/ionic/ionic.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ionic/core/css/ionic.bundle.css" />
+
+  <!-- Firebase Web SDK (v10 Compatibility Mode) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+  <!-- PayPal JavaScript SDK (Ganti client-id dengan milikmu saat siap production) -->
+  <script src="https://www.paypal.com/sdk/js?client-id=sb&currency=USD"></script>
+
+  <style>
+    :root {
+      --bg-page: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #1e293b;
+      --text-sub: #64748b;
+      --border-color: #e2e8f0;
+      --accent-color: #2563eb;
+      --accent-hover: #1d4ed8;
+      --success-color: #10b981;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-page: #0f172a;
+        --card-bg: #1e293b;
+        --text-main: #f8fafc;
+        --text-sub: #94a3b8;
+        --border-color: #334155;
+        --accent-color: #3b82f6;
+        --accent-hover: #60a5fa;
+        --success-color: #34d399;
+      }
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-page);
+      color: var(--text-main);
+      margin: 0;
+      padding: 0;
+    }
+
+    .profile-container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 24px 16px 60px 16px;
+    }
+
+    .back-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--accent-color);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 20px;
+      cursor: pointer;
+    }
+
+    /* User Profile Card */
+    .profile-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+      margin-bottom: 24px;
+    }
+
+    .user-info-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .avatar-lg {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--accent-color);
+    }
+
+    .user-text h2 {
+      margin: 0 0 4px 0;
+      font-size: 1.25rem;
+      font-weight: 700;
+    }
+
+    .user-text p {
+      margin: 0 0 4px 0;
+      font-size: 0.88rem;
+      color: var(--text-sub);
+    }
+
+    .user-uid-badge {
+      font-size: 0.72rem;
+      font-family: monospace;
+      background: rgba(0, 0, 0, 0.06);
+      padding: 2px 8px;
+      border-radius: 6px;
+      color: var(--text-sub);
+      display: inline-block;
+    }
+
+    /* Balance Dashboard Grid */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    }
+
+    .stat-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--text-sub);
+      font-size: 0.88rem;
+      margin-bottom: 12px;
+    }
+
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin: 0;
+    }
+
+    .stat-subtext {
+      font-size: 0.78rem;
+      color: var(--success-color);
+      margin-top: 6px;
+    }
+
+    /* Pricing Section */
+    .section-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin: 32px 0 16px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .plans-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+
+    .plan-card {
+      background: var(--card-bg);
+      border: 2px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s, border-color 0.2s;
+      position: relative;
+    }
+
+    .plan-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent-color);
+    }
+
+    .plan-card.popular {
+      border-color: var(--accent-color);
+    }
+
+    .popular-badge {
+      position: absolute;
+      top: -12px;
+      right: 16px;
+      background: var(--accent-color);
+      color: #fff;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 10px;
+      border-radius: 12px;
+      text-transform: uppercase;
+    }
+
+    .plan-name {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin: 0 0 8px 0;
+    }
+
+    .plan-tokens {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--accent-color);
+      margin: 0 0 8px 0;
+    }
+
+    .plan-price {
+      font-size: 1rem;
+      color: var(--text-sub);
+      margin-bottom: 20px;
+    }
+
+    .paypal-btn-container {
+      margin-top: 16px;
+    }
+
+    /* Transaction History Table */
+    .history-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .history-list {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .history-list th, .history-list td {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.88rem;
+    }
+
+    .history-list th {
+      background: rgba(0,0,0,0.02);
+      color: var(--text-sub);
+      font-weight: 600;
+    }
+
+    .badge-credit {
+      color: var(--success-color);
+      font-weight: 600;
+    }
+
+    .badge-debit {
+      color: #ef4444;
+      font-weight: 600;
+    }
+
+    /* Login State Hidden Placeholder */
+    #logged-out-view {
+      text-align: center;
+      padding: 80px 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="profile-container">
+    
+    <!-- Tombol Kembali ke Chat -->
+    <a href="./" class="back-nav">
+      <ion-icon name="arrow-back-outline"></ion-icon> Kembali ke Quran AI
+    </a>
+
+    <!-- VIEW USER BELUM LOGIN -->
+    <div id="logged-out-view" style="display: none;">
+      <ion-icon name="lock-closed-outline" style="font-size: 64px; color: var(--text-sub);"></ion-icon>
+      <h2>Akses Terbatas</h2>
+      <p style="color: var(--text-sub); max-width: 400px; margin: 0 auto 24px auto;">
+        Silakan masuk menggunakan akun Google Anda terlebih dahulu untuk melihat saldo token dan melakukan pembelian.
+      </p>
+      <ion-button color="primary" id="login-page-btn">
+        <ion-icon name="logo-google" slot="start"></ion-icon>
+        Masuk dengan Google
+      </ion-button>
+    </div>
+
+    <!-- VIEW USER SUDAH LOGIN -->
+    <div id="logged-in-view">
+      
+      <!-- User Info Header -->
+      <div class="profile-card">
+        <div class="user-info-group">
+          <img id="user-avatar-img" src="https://www.gravatar.com/avatar?d=mp" class="avatar-lg" alt="Profile Picture">
+          <div class="user-text">
+            <h2 id="user-display-name">Memuat Nama...</h2>
+            <p id="user-email-text">email@domain.com</p>
+            <span class="user-uid-badge" id="user-uid-badge">UID: -</span>
+          </div>
+        </div>
+        <ion-button fill="outline" color="danger" id="logout-page-btn" size="small">
+          <ion-icon name="log-out-outline" slot="start"></ion-icon>
+          Keluar
+        </ion-button>
+      </div>
+
+      <!-- Dashboard Statistics -->
+      <div class="dashboard-grid">
+        <div class="stat-card">
+          <div class="stat-header">
+            <span>Sisa Saldo Token</span>
+            <ion-icon name="wallet-outline" style="font-size: 20px; color: var(--accent-color);"></ion-icon>
+          </div>
+          <h3 class="stat-value" id="balance-display">0</h3>
+          <div class="stat-subtext" id="balance-status-text">Siap digunakan untuk chat AI</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-header">
+            <span>Model AI Aktif</span>
+            <ion-icon name="sparkles-outline" style="font-size: 20px; color: #8b5cf6;"></ion-icon>
+          </div>
+          <h3 class="stat-value" style="font-size: 1.2rem;">Gemma 3 12B IT</h3>
+          <div class="stat-subtext" style="color: var(--text-sub);">Cloudflare Workers AI</div>
+        </div>
+      </div>
+
+      <!-- Pembelian Paket Token dengan PayPal -->
+      <div class="section-title">
+        <ion-icon name="cart-outline" style="color: var(--accent-color);"></ion-icon>
+        Beli Token (Top Up)
+      </div>
+
+      <div class="plans-grid">
+        
+        <!-- Starter Plan -->
+        <div class="plan-card">
+          <div>
+            <h3 class="plan-name">Starter</h3>
+            <div class="plan-tokens">50.000 <span style="font-size: 0.8rem; color: var(--text-sub);">Token</span></div>
+            <div class="plan-price">$1.00 USD</div>
+          </div>
+          <div id="paypal-button-starter" class="paypal-btn-container"></div>
+        </div>
+
+        <!-- Pro Plan (Popular) -->
+        <div class="plan-card popular">
+          <span class="popular-badge">Paling Laris</span>
+          <div>
+            <h3 class="plan-name">Pro</h3>
+            <div class="plan-tokens">300.000 <span style="font-size: 0.8rem; color: var(--text-sub);">Token</span></div>
+            <div class="plan-price">$5.00 USD</div>
+          </div>
+          <div id="paypal-button-pro" class="paypal-btn-container"></div>
+        </div>
+
+        <!-- Business Plan -->
+        <div class="plan-card">
+          <div>
+            <h3 class="plan-name">Business</h3>
+            <div class="plan-tokens">1.500.000 <span style="font-size: 0.8rem; color: var(--text-sub);">Token</span></div>
+            <div class="plan-price">$20.00 USD</div>
+          </div>
+          <div id="paypal-button-business" class="paypal-btn-container"></div>
+        </div>
+
+      </div>
+
+      <!-- Riwayat Transaksi & Pemakaian -->
+      <div class="section-title">
+        <ion-icon name="time-outline" style="color: var(--accent-color);"></ion-icon>
+        Riwayat Pemakaian & Transaksi
+      </div>
+
+      <div class="history-card">
+        <table class="history-list">
+          <thead>
+            <tr>
+              <th>Tanggal</th>
+              <th>Aktivitas</th>
+              <th>Perubahan Token</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="history-table-body">
+            <tr>
+              <td colspan="4" style="text-align: center; color: var(--text-sub);">Memuat riwayat...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    // ---------- FIREBASE CONFIGURATION ----------
+    const firebaseConfig = {
+      apiKey: "AIzaSyATyvdXXQHvJE6-EYiwXJ0jCZkvUBW-3c8",
+      authDomain: "my-ai-quran.firebaseapp.com",
+      projectId: "my-ai-quran",
+      storageBucket: "my-ai-quran.firebasestorage.app",
+      messagingSenderId: "1025965303376",
+      appId: "1:1025965303376:web:d2aa080d9f81b4fa699355"
+    };
+
+    const BILLING_WORKER_URL = 'https://ai-token-billing.mvstream.workers.dev';
+
+    let currentUser = null;
+
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
+
+    // ---------- AUTH LISTENER ----------
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        currentUser = user;
+        document.getElementById('logged-out-view').style.display = 'none';
+        document.getElementById('logged-in-view').style.display = 'block';
+
+        // Render Data Profil
+        document.getElementById('user-avatar-img').src = user.photoURL || 'https://www.gravatar.com/avatar?d=mp';
+        document.getElementById('user-display-name').innerText = user.displayName || 'Pengguna Google';
+        document.getElementById('user-email-text').innerText = user.email || '';
+        document.getElementById('user-uid-badge').innerText = `UID: ${user.uid}`;
+
+        // Fetch Balance & Render PayPal
+        fetchUserBalance(user.uid);
+        initPayPalButtons(user.uid);
+        renderHistoryTable();
+      } else {
+        currentUser = null;
+        document.getElementById('logged-out-view').style.display = 'block';
+        document.getElementById('logged-in-view').style.display = 'none';
+      }
+    });
+
+    // Login/Logout Handler
+    document.getElementById('login-page-btn')?.addEventListener('click', () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider);
+    });
+
+    document.getElementById('logout-page-btn')?.addEventListener('click', () => {
+      auth.signOut();
+    });
+
+    // ---------- FETCH USER BALANCE DARI BILLING WORKER ----------
+    async function fetchUserBalance(userId) {
+      try {
+        const res = await fetch(`${BILLING_WORKER_URL}/balance?userId=${encodeURIComponent(userId)}`);
+        const data = await res.json();
+        
+        if (data.ok) {
+          const balanceFormatted = new Intl.NumberFormat('id-ID').format(data.balance);
+          document.getElementById('balance-display').innerText = balanceFormatted;
+
+          if (data.balance <= 0) {
+            document.getElementById('balance-status-text').innerText = 'Saldo habis. Harap top up untuk menggunakan AI.';
+            document.getElementById('balance-status-text').style.color = '#ef4444';
+          } else {
+            document.getElementById('balance-status-text').innerText = 'Siap digunakan untuk chat AI.';
+            document.getElementById('balance-status-text').style.color = 'var(--success-color)';
+          }
+        }
+      } catch (err) {
+        console.error('Gagal mengambil saldo:', err);
+      }
+    }
+
+    // ---------- CREDIT TOKENS VIA WORKER (/purchase) ----------
+    async function creditTokensToUser(userId, sku, referenceId) {
+      try {
+        const res = await fetch(`${BILLING_WORKER_URL}/purchase`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, sku, referenceId })
+        });
+        const data = await res.json();
+
+        if (data.ok) {
+          alert(`Berhasil! Sisa saldo Anda sekarang: ${data.newBalance.toLocaleString('id-ID')} token.`);
+          fetchUserBalance(userId);
+          
+          // Catat transaksi di riwayat lokal
+          saveTransactionRecord(sku, data.credited, referenceId);
+          renderHistoryTable();
+        } else {
+          alert('Gagal mengkreditkan token. Silakan hubungi admin.');
+        }
+      } catch (err) {
+        console.error('Gagal proses kredit:', err);
+      }
+    }
+
+    // ---------- PAYPAL BUTTONS INTEGRATION ----------
+    function initPayPalButtons(userId) {
+      const plans = [
+        { id: 'paypal-button-starter', sku: 'STARTER', price: '1.00' },
+        { id: 'paypal-button-pro', sku: 'PRO', price: '5.00' },
+        { id: 'paypal-button-business', sku: 'BUSINESS', price: '20.00' }
+      ];
+
+      plans.forEach((plan) => {
+        const container = document.getElementById(plan.id);
+        if (container && container.childElementCount === 0) {
+          paypal.Buttons({
+            style: { layout: 'vertical', color: 'blue', shape: 'rect', label: 'pay' },
+            createOrder: function(data, actions) {
+              return actions.order.create({
+                purchase_units: [{
+                  amount: { value: plan.price, currency_code: 'USD' },
+                  description: `Top Up Token Quran AI - Paket ${plan.sku}`
+                }]
+              });
+            },
+            onApprove: function(data, actions) {
+              return actions.order.capture().then(function(details) {
+                const referenceId = details.id || data.orderID;
+                creditTokensToUser(userId, plan.sku, referenceId);
+              });
+            }
+          }).render('#' + plan.id);
+        }
+      });
+    }
+
+    // ---------- TRANSACTION HISTORY LOG ----------
+    function saveTransactionRecord(sku, tokens, refId) {
+      const records = JSON.parse(localStorage.getItem('quran_ai_transactions') || '[]');
+      records.unshift({
+        date: new Date().toLocaleDateString('id-ID') + ' ' + new Date().toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'}),
+        activity: `Pembelian Paket ${sku}`,
+        tokens: `+${tokens.toLocaleString('id-ID')}`,
+        type: 'credit',
+        status: 'Berhasil'
+      });
+      localStorage.setItem('quran_ai_transactions', JSON.stringify(records));
+    }
+
+    function renderHistoryTable() {
+      const tbody = document.getElementById('history-table-body');
+      const records = JSON.parse(localStorage.getItem('quran_ai_transactions') || '[]');
+
+      if (records.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-sub);">Belum ada riwayat transaksi pembelian.</td></tr>`;
+        return;
+      }
+
+      let html = '';
+      records.forEach(r => {
+        html += `
+          <tr>
+            <td>${r.date}</td>
+            <td>${r.activity}</td>
+            <td class="${r.type === 'credit' ? 'badge-credit' : 'badge-debit'}">${r.tokens} Token</td>
+            <td><span style="color: var(--success-color); font-weight: 500;">${r.status}</span></td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    }
+  </script>
+
+</body>
+</html>
