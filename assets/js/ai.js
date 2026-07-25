@@ -1,229 +1,4 @@
 (function(){
-  // ---------- KONFIGURASI FIREBASE AUTH ----------
-  const firebaseConfig = {
-    apiKey: "AIzaSyATyvdXXQHvJE6-EYiwXJ0jCZkvUBW-3c8",
-    authDomain: "my-ai-quran.firebaseapp.com",
-    projectId: "my-ai-quran",
-    storageBucket: "my-ai-quran.firebasestorage.app",
-    messagingSenderId: "1025965303376",
-    appId: "1:1025965303376:web:d2aa080d9f81b4fa699355"
-  };
-
-  let currentUser = null; 
-  let auth = null;
-
-  function initFirebase() {
-    updateAuthUI(null);
-
-    if (window.firebase) {
-      try {
-        if (!firebase.apps.length) {
-          firebase.initializeApp(firebaseConfig);
-        }
-        auth = firebase.auth();
-
-        auth.onAuthStateChanged((user) => {
-          const wasLoggedOut = !currentUser && user;
-          currentUser = user;
-          updateAuthUI(user);
-
-          if (user) {
-            removeLoginFloatingBanner();
-            if (wasLoggedOut) {
-              showWelcomeToast(user.displayName || 'Pengguna');
-            }
-          }
-        });
-      } catch (e) {
-        console.warn("Kredensial Firebase belum dikonfigurasi dengan benar:", e);
-      }
-    } else {
-      console.warn("Firebase SDK tidak ditemukan di window object.");
-    }
-  }
-
-  // Toast Notifikasi Selamat Datang
-  async function showWelcomeToast(userName) {
-    if (window.Ionic && Ionic.toastController) {
-      const toast = await Ionic.toastController.create({
-        message: `Selamat datang kembali, ${userName}! 🕌`,
-        duration: 3500,
-        position: 'top',
-        color: 'success',
-        icon: 'checkmark-circle-outline',
-        buttons: [{ text: 'OK', role: 'cancel' }]
-      });
-      await toast.present();
-    } else {
-      const toastDiv = document.createElement('div');
-      toastDiv.id = 'custom-welcome-toast';
-      toastDiv.style.cssText = `
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: #10b981;
-        color: #ffffff;
-        padding: 12px 24px;
-        border-radius: 30px;
-        font-size: 0.9rem;
-        font-weight: 600;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 999999;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        transition: all 0.3s ease;
-      `;
-      toastDiv.innerHTML = `<span>✨ Selamat datang kembali, <strong>${escapeHtml(userName)}</strong>!</span>`;
-      document.body.appendChild(toastDiv);
-      setTimeout(() => {
-        toastDiv.style.opacity = '0';
-        setTimeout(() => toastDiv.remove(), 300);
-      }, 3500);
-    }
-  }
-
-  function updateAuthUI(user) {
-    const authContainer = document.getElementById('firebase-auth-container');
-    if (!authContainer) return;
-
-    if (user) {
-      authContainer.innerHTML = `
-        <div class="user-profile-card">
-          <a href="./profile" class="user-profile-info" style="text-decoration: none; color: inherit; cursor: pointer;">
-            <img src="${user.photoURL || 'https://www.gravatar.com/avatar?d=mp'}" class="user-avatar" alt="User Profile" />
-            <div class="user-details">
-              <span class="user-name">${escapeHtml(user.displayName || 'Pengguna')}</span>
-              <span class="user-email">${escapeHtml(user.email || '')}</span>
-            </div>
-          </a>
-          <ion-button fill="clear" size="small" id="google-logout-btn" class="logout-btn">
-            <ion-icon name="log-out-outline" slot="icon-only"></ion-icon>
-          </ion-button>
-        </div>
-      `;
-
-      document.getElementById('google-logout-btn')?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (auth) {
-          auth.signOut().then(() => {
-            showAlert('Logout', 'Anda telah keluar dari akun Google.');
-          });
-        }
-      });
-    } else {
-      authContainer.innerHTML = `
-        <button class="google-login-native-btn" id="sidebar-google-login-btn">
-          <svg class="google-icon-svg" viewBox="0 0 24 24">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-          </svg>
-          <span>Masuk dengan Google</span>
-        </button>
-      `;
-
-      document.getElementById('sidebar-google-login-btn')?.addEventListener('click', loginWithGoogle);
-    }
-  }
-
-  async function loginWithGoogle() {
-    if (!auth) {
-      await showAlert('Firebase Konfigurasi', 'Harap periksa kredensial Firebase SDK.');
-      return;
-    }
-    const provider = new firebase.auth.GoogleAuthProvider();
-    try {
-      await auth.signInWithPopup(provider);
-    } catch (error) {
-      console.error("Gagal Login Google:", error);
-      showAlert('Gagal Login', error.message || 'Terjadi kesalahan saat masuk dengan Google.');
-    }
-  }
-
-  // ---------- FLOATING BANNER NOTIFIKASI LOGIN ----------
-  function showLoginFloatingBanner() {
-    removeLoginFloatingBanner();
-
-    const bannerDiv = document.createElement('div');
-    bannerDiv.id = 'floating-login-banner';
-    bannerDiv.style.cssText = `
-      position: fixed;
-      bottom: 80px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: calc(100% - 32px);
-      max-width: 480px;
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-left: 4px solid #4285F4;
-      border-radius: 14px;
-      padding: 12px 16px;
-      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-      z-index: 9999;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      animation: bannerSlideUp 0.3s ease-out;
-    `;
-
-    if (!document.getElementById('banner-anim-style')) {
-      const style = document.createElement('style');
-      style.id = 'banner-anim-style';
-      style.innerHTML = `
-        @keyframes bannerSlideUp {
-          from { opacity: 0; transform: translate(-50%, 20px); }
-          to { opacity: 1; transform: translate(-50%, 0); }
-        }
-        @media (prefers-color-scheme: dark) {
-          #floating-login-banner {
-            background: #1e293b !important;
-            border-color: #334155 !important;
-            color: #f8fafc !important;
-          }
-        }
-      `;
-      document.head.appendChild(style);
-    }
-
-    bannerDiv.innerHTML = `
-      <div style="display: flex; flex-direction: column; gap: 2px;">
-        <span style="font-size: 0.85rem; font-weight: 700; color: #1e293b;">🔒 Akses Terbatas</span>
-        <span style="font-size: 0.78rem; color: #64748b;">Silakan login terlebih dahulu untuk menggunakan AI.</span>
-      </div>
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <button class="google-login-native-btn" id="banner-google-btn" style="padding: 6px 12px; font-size: 0.78rem; border-radius: 8px; margin: 0; white-space: nowrap;">
-          <svg class="google-icon-svg" viewBox="0 0 24 24" style="width: 14px; height: 14px;">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-          </svg>
-          <span>Masuk</span>
-        </button>
-        <button id="close-login-banner" style="background: transparent; border: none; font-size: 1.2rem; cursor: pointer; color: #94a3b8; padding: 2px 6px;">&times;</button>
-      </div>
-    `;
-
-    document.body.appendChild(bannerDiv);
-
-    document.getElementById('banner-google-btn')?.addEventListener('click', () => {
-      loginWithGoogle();
-    });
-
-    document.getElementById('close-login-banner')?.addEventListener('click', () => {
-      removeLoginFloatingBanner();
-    });
-  }
-
-  function removeLoginFloatingBanner() {
-    const existing = document.getElementById('floating-login-banner');
-    if (existing) existing.remove();
-  }
-
   // ---------- GLOBAL STATE ----------
   let conversations = [];        // array of { id, title, messages: [{id, text, sender, timestamp}] }
   let currentConversationId = null;
@@ -514,11 +289,11 @@
     const currentConv = conversations.find(c => c.id === currentConversationId);
     if (!currentConv) return;
 
-    messagesContainer.innerHTML = '';
+    messagesContainer.innerHTML = ''; // Sekarang aman karena empty-chat-placeholder berada diluar container ini!
     const messages = currentConv.messages;
 
     if (messages.length === 0) {
-      updatePlaceholderTime();
+      updatePlaceholderTime(); // Update waktu saat placeholder tampil
       emptyPlaceholder.style.display = 'flex';
     } else {
       emptyPlaceholder.style.display = 'none';
@@ -611,13 +386,6 @@
 
   async function getAIResponse(userMessage) {
     if (isWaitingResponse) return;
-
-    // VALIDASI FRONTEND: TAMPILKAN FLOATING BANNER JIKA BELUM LOGIN (TANPA MERUSAK HISTORY)
-    if (!currentUser) {
-      showLoginFloatingBanner();
-      return;
-    }
-
     isWaitingResponse = true;
     showTypingIndicatorOnly();
 
@@ -629,42 +397,28 @@
       content: m.text
     }));
 
-    const activeUserId = currentUser.uid;
-
     try {
       const response = await fetch(`${API_BASE_URL}/api/chat`, {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'x-user-id': activeUserId
-        },
-        body: JSON.stringify({ 
-          userId: activeUserId,
-          messages: messageHistory 
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ messages: messageHistory })
       });
 
+      // PERBAIKAN UTAMA: Parsing pesan kesalahan detail langsung jika respons tidak ok
       if (!response.ok) {
         let errorText = 'Terjadi kendala pada server backend.';
         try {
           const errData = await response.json();
           if (errData && errData.error) {
-            errorText = errData.error;
-          }
-          if (errData && errData.requireLogin) {
-            removeTypingIndicator();
-            showLoginFloatingBanner();
-            return;
+            errorText = `Error Backend: ${errData.error}`;
           }
         } catch(e) {
-          if (response.status === 401) {
-            removeTypingIndicator();
-            showLoginFloatingBanner();
-            return;
-          }
-          if (response.status === 402) {
-            errorText = `Saldo token untuk ID Akun (${activeUserId}) habis. Silakan top-up saldo token terlebih dahulu.`;
-          }
+          try {
+            const rawText = await response.text();
+            if (rawText) {
+              errorText = `Error Backend (${response.status}): ${rawText.substring(0, 150)}`;
+            }
+          } catch(e2) {}
         }
         throw new Error(errorText);
       }
@@ -779,7 +533,9 @@
     } catch (error) {
       console.error('Error:', error);
       removeTypingIndicator();
-      addMessageToCurrent('ai', `Maaf Bro, ada kendala:\n\n**Detail Kendala:** ${error.message || error}`);
+      
+      // PERBAIKAN: Menampilkan detail kesalahan asli secara transparan ke user
+      addMessageToCurrent('ai', `Maaf Bro, ada gangguan koneksi dengan asisten AI.\n\n**Detail Kendala:** ${error.message || error}`);
       aiMessageElement = null;
     } finally {
       isWaitingResponse = false;
@@ -796,12 +552,6 @@
     }
     let rawText = messageInput.value?.trim();
     if (!rawText) return;
-
-    if (!currentUser) {
-      showLoginFloatingBanner();
-      return;
-    }
-
     addMessageToCurrent('user', rawText);
     messageInput.value = '';
     await getAIResponse(rawText);
@@ -1373,24 +1123,24 @@
   function waitForAyahAndScroll(surahNumber, ayahNumber) {
     let attempts = 0;
     const maxAttempts = 30; 
-
+    
     const interval = setInterval(() => {
       attempts++;
       const targetAyah = document.getElementById(`ayah-${ayahNumber}`);
-
+      
       if (targetAyah) {
         clearInterval(interval);
-
+        
         targetAyah.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
+        
         targetAyah.style.backgroundColor = '#f7fafc';
         targetAyah.style.borderLeft = '4px solid #2b6cb0';
-
+        
         setTimeout(() => {
           targetAyah.style.backgroundColor = 'transparent';
           targetAyah.style.borderLeft = 'none';
         }, 4000); 
-
+        
       } else if (attempts >= maxAttempts) {
         clearInterval(interval);
         console.warn(`Elemen ayat tujuan #ayah-${ayahNumber} gagal termuat di halaman.`);
@@ -1427,8 +1177,6 @@
     playerCurrentAyahText = document.getElementById('player-current-ayah');
     playAllIcon = document.getElementById('play-all-icon');
 
-    initFirebase();
-
     loadFromLocalStorage();
 
     updatePlaceholderTime();
@@ -1440,8 +1188,8 @@
     const curConv = conversations.find(c => c.id === currentConversationId);
     if (curConv) chatTitleEl.innerText = curConv.title;
 
-    sendBtn?.addEventListener('click', () => sendUserMessage());
-    messageInput?.addEventListener('keypress', (e) => {
+    sendBtn.addEventListener('click', () => sendUserMessage());
+    messageInput.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
         sendUserMessage();
@@ -1454,9 +1202,7 @@
 
     closeQuranBtn?.addEventListener('click', () => {
       resetContinuousPlayerState();
-      if (quranModal && typeof quranModal.dismiss === 'function') {
-        quranModal.dismiss();
-      }
+      quranModal.dismiss();
     });
 
     quranBackBtn?.addEventListener('click', () => {
