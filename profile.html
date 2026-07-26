@@ -14,11 +14,10 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
-  <!-- FIX 1: URL PayPal SDK yang Benar (client-id) -->
+  <!-- PayPal JavaScript SDK -->
   <script src="https://www.paypal.com/sdk/js?client-id=BAA4ZnFKdGIwbyuwcc2YB5NFc9jHSVHf80xJ0-dJ2Z-ZeKOOjz11baY7Rtm6sS3K5TTooIWrXheKPv_oUA&currency=USD"></script>
 
   <style>
-    /* FIX UTAMA SCROLLBAR: Memaksa Halaman Selalu Bisa Di-scroll */
     html, body {
       height: 100% !important;
       overflow-y: auto !important;
@@ -83,7 +82,6 @@
       cursor: pointer;
     }
 
-    /* Kartu Profil User */
     .profile-card {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
@@ -135,7 +133,6 @@
       word-break: break-all;
     }
 
-    /* Grid Dashboard Saldo */
     .dashboard-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -173,7 +170,6 @@
       margin-top: 6px;
     }
 
-    /* Pricing Section */
     .section-title {
       font-size: 1.15rem;
       font-weight: 700;
@@ -248,7 +244,6 @@
       min-height: 45px;
     }
 
-    /* Tabel Riwayat Transaksi */
     .history-card {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
@@ -335,7 +330,7 @@
             </ion-button>
           </div>
 
-          <!-- Statistik Saldo & AI Model -->
+          <!-- Statistik Saldo & AI Model Dinamis -->
           <div class="dashboard-grid">
             <div class="stat-card">
               <div class="stat-header">
@@ -351,8 +346,9 @@
                 <span>Model AI Aktif</span>
                 <ion-icon name="sparkles-outline" style="font-size: 20px; color: #8b5cf6;"></ion-icon>
               </div>
-              <h3 class="stat-value" style="font-size: 1.2rem;">Gemma 3 12B IT</h3>
-              <div class="stat-subtext" style="color: var(--text-sub);">Cloudflare Workers AI</div>
+              <!-- DIBUAT DINAMIS DARI API BACKEND -->
+              <h3 class="stat-value" id="active-model-name" style="font-size: 1.2rem;">Memuat Model...</h3>
+              <div class="stat-subtext" id="active-model-provider" style="color: var(--text-sub);">-</div>
             </div>
           </div>
 
@@ -363,8 +359,6 @@
           </div>
 
           <div class="plans-grid">
-
-            <!-- Paket Starter -->
             <div class="plan-card">
               <div>
                 <h3 class="plan-name">Starter</h3>
@@ -374,7 +368,6 @@
               <div id="paypal-button-starter" class="paypal-btn-container"></div>
             </div>
 
-            <!-- Paket Pro -->
             <div class="plan-card popular">
               <span class="popular-badge">Paling Laris</span>
               <div>
@@ -385,7 +378,6 @@
               <div id="paypal-button-pro" class="paypal-btn-container"></div>
             </div>
 
-            <!-- Paket Business -->
             <div class="plan-card">
               <div>
                 <h3 class="plan-name">Business</h3>
@@ -394,7 +386,6 @@
               </div>
               <div id="paypal-button-business" class="paypal-btn-container"></div>
             </div>
-
           </div>
 
           <!-- Riwayat Transaksi -->
@@ -435,6 +426,10 @@
       document.documentElement.style.setProperty('overflow-y', 'auto', 'important');
     }, 500);
 
+    // URL Backend Worker AI & Billing
+    const MAIN_WORKER_URL = window.location.origin; // atau ganti domain worker utama kamu
+    const BILLING_WORKER_URL = 'https://ai-token-billing.mvstream.workers.dev';
+
     // ---------- KONFIGURASI FIREBASE ----------
     const firebaseConfig = {
       apiKey: "AIzaSyATyvdXXQHvJE6-EYiwXJ0jCZkvUBW-3c8",
@@ -445,8 +440,6 @@
       appId: "1:1025965303376:web:d2aa080d9f81b4fa699355"
     };
 
-    const BILLING_WORKER_URL = 'https://ai-token-billing.mvstream.workers.dev';
-
     let currentUser = null;
 
     if (!firebase.apps.length) {
@@ -456,18 +449,18 @@
 
     // ---------- LISTENER STATUS AUTH ----------
     auth.onAuthStateChanged((user) => {
+      fetchActiveModel(); // Ambil informasi model AI secara otomatis
+
       if (user) {
         currentUser = user;
         document.getElementById('logged-out-view').style.display = 'none';
         document.getElementById('logged-in-view').style.display = 'block';
 
-        // Render Data Profil
         document.getElementById('user-avatar-img').src = user.photoURL || 'https://www.gravatar.com/avatar?d=mp';
         document.getElementById('user-display-name').innerText = user.displayName || 'Pengguna Google';
         document.getElementById('user-email-text').innerText = user.email || '';
         document.getElementById('user-uid-badge').innerText = `UID: ${user.uid}`;
 
-        // Ambil Saldo & Render Tombol PayPal
         fetchUserBalance(user.uid);
         initPayPalButtons(user.uid);
         renderHistoryTable();
@@ -478,7 +471,22 @@
       }
     });
 
-    // Event Handler Login/Logout
+    // ---------- AMBIL MODEL AI AKTIF SECARA DINAMIS ----------
+    async function fetchActiveModel() {
+      try {
+        const res = await fetch(`${MAIN_WORKER_URL}/api/model`);
+        const data = await res.json();
+        if (data.ok && data.displayName) {
+          document.getElementById('active-model-name').innerText = data.displayName;
+          document.getElementById('active-model-provider').innerText = data.provider || 'Cloudflare Workers AI';
+        }
+      } catch (err) {
+        console.error('Gagal mengambil model AI dari backend:', err);
+        document.getElementById('active-model-name').innerText = 'Qwen 3 30B';
+        document.getElementById('active-model-provider').innerText = 'Cloudflare Workers AI';
+      }
+    }
+
     document.getElementById('login-page-btn')?.addEventListener('click', () => {
       const provider = new firebase.auth.GoogleAuthProvider();
       auth.signInWithPopup(provider);
@@ -488,7 +496,6 @@
       auth.signOut();
     });
 
-    // ---------- AMBIL SALDO DARI WORKER BILLING ----------
     async function fetchUserBalance(userId) {
       try {
         const res = await fetch(`${BILLING_WORKER_URL}/balance?userId=${encodeURIComponent(userId)}`);
@@ -511,7 +518,6 @@
       }
     }
 
-    // ---------- PROSES KREDIT TOKEN VIA WORKER ----------
     async function creditTokensToUser(userId, sku, referenceId) {
       try {
         const res = await fetch(`${BILLING_WORKER_URL}/purchase`, {
@@ -524,8 +530,6 @@
         if (data.ok) {
           alert(`Berhasil! Sisa saldo Anda sekarang: ${data.newBalance.toLocaleString('id-ID')} token.`);
           fetchUserBalance(userId);
-
-          // Catat transaksi di riwayat lokal
           saveTransactionRecord(sku, data.credited, referenceId);
           renderHistoryTable();
         } else {
@@ -536,11 +540,8 @@
       }
     }
 
-    // ---------- FIX 2: INISIALISASI TOMBOL PAYPAL DENGAN RETRY SAFETY ----------
     function initPayPalButtons(userId) {
-      // Pastikan SDK PayPal sudah termuat sepenuhnya di browser
       if (typeof paypal === 'undefined') {
-        console.warn('PayPal SDK belum siap, mencobanya lagi dalam 500ms...');
         setTimeout(() => initPayPalButtons(userId), 500);
         return;
       }
@@ -570,19 +571,15 @@
                   const referenceId = details.id || data.orderID;
                   creditTokensToUser(userId, plan.sku, referenceId);
                 });
-              },
-              onError: function(err) {
-                console.error('PayPal Button Error:', err);
               }
             }).render('#' + plan.id);
           } catch (e) {
-            console.error('Error saat render PayPal button:', e);
+            console.error('Error render PayPal:', e);
           }
         }
       });
     }
 
-    // ---------- SIMPAN & RENDER RIWAYAT TRANSAKSI ----------
     function saveTransactionRecord(sku, tokens, refId) {
       const records = JSON.parse(localStorage.getItem('quran_ai_transactions') || '[]');
       records.unshift({
