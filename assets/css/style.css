@@ -21,6 +21,11 @@ body, ion-app, ion-item, ion-label, ion-title, ion-button, ion-input, ion-textar
  --highlight-height: 0px !important;
 }
 
+.hidden {
+   display: none !important;
+   visibility: hidden !important; 
+}
+
 /* --- HYBRID CHAT CONTAINER --- */
 .chat-container {
   padding: 0 !important;
