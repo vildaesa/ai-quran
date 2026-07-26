@@ -14,8 +14,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
-  <!-- PayPal JavaScript SDK (Ganti client-id dengan milikmu saat siap production) -->
-  <script src="https://www.paypal.com/sdk/js?BAA4ZnFKdGIwbyuwcc2YB5NFc9jHSVHf80xJ0-dJ2Z-ZeKOOjz11baY7Rtm6sS3K5TTooIWrXheKPv_oUA=sb&currency=USD"></script>
+  <!-- FIX 1: URL PayPal SDK yang Benar (client-id) -->
+  <script src="https://www.paypal.com/sdk/js?client-id=BAA4ZnFKdGIwbyuwcc2YB5NFc9jHSVHf80xJ0-dJ2Z-ZeKOOjz11baY7Rtm6sS3K5TTooIWrXheKPv_oUA&currency=USD"></script>
 
   <style>
     /* FIX UTAMA SCROLLBAR: Memaksa Halaman Selalu Bisa Di-scroll */
@@ -295,9 +295,9 @@
 
   <ion-app>
     <ion-content scroll-y="true" class="ion-padding-bottom">
-      
+
       <div class="profile-container">
-        
+
         <!-- Tombol Kembali -->
         <a href="./" class="back-nav">
           <ion-icon name="arrow-back-outline"></ion-icon> Kembali ke Quran AI
@@ -318,7 +318,7 @@
 
         <!-- TAMPILAN UNTUK USER SUDAH LOGIN -->
         <div id="logged-in-view">
-          
+
           <!-- Informasi Profil User -->
           <div class="profile-card">
             <div class="user-info-group">
@@ -363,7 +363,7 @@
           </div>
 
           <div class="plans-grid">
-            
+
             <!-- Paket Starter -->
             <div class="plan-card">
               <div>
@@ -429,7 +429,6 @@
   </ion-app>
 
   <script>
-    // FIX TAMBAHAN: Paksa hapus gaya overflow-hidden dari body secara berkala jika diinjeksi oleh script eksternal
     setInterval(() => {
       document.body.style.setProperty('overflow', 'auto', 'important');
       document.body.style.setProperty('overflow-y', 'auto', 'important');
@@ -494,7 +493,7 @@
       try {
         const res = await fetch(`${BILLING_WORKER_URL}/balance?userId=${encodeURIComponent(userId)}`);
         const data = await res.json();
-        
+
         if (data.ok) {
           const balanceFormatted = new Intl.NumberFormat('id-ID').format(data.balance);
           document.getElementById('balance-display').innerText = balanceFormatted;
@@ -525,7 +524,7 @@
         if (data.ok) {
           alert(`Berhasil! Sisa saldo Anda sekarang: ${data.newBalance.toLocaleString('id-ID')} token.`);
           fetchUserBalance(userId);
-          
+
           // Catat transaksi di riwayat lokal
           saveTransactionRecord(sku, data.credited, referenceId);
           renderHistoryTable();
@@ -537,8 +536,15 @@
       }
     }
 
-    // ---------- INISIALISASI TOMBOL PAYPAL ----------
+    // ---------- FIX 2: INISIALISASI TOMBOL PAYPAL DENGAN RETRY SAFETY ----------
     function initPayPalButtons(userId) {
+      // Pastikan SDK PayPal sudah termuat sepenuhnya di browser
+      if (typeof paypal === 'undefined') {
+        console.warn('PayPal SDK belum siap, mencobanya lagi dalam 500ms...');
+        setTimeout(() => initPayPalButtons(userId), 500);
+        return;
+      }
+
       const plans = [
         { id: 'paypal-button-starter', sku: 'STARTER', price: '1.00' },
         { id: 'paypal-button-pro', sku: 'PRO', price: '5.00' },
@@ -548,23 +554,30 @@
       plans.forEach((plan) => {
         const container = document.getElementById(plan.id);
         if (container && container.childElementCount === 0) {
-          paypal.Buttons({
-            style: { layout: 'vertical', color: 'blue', shape: 'rect', label: 'pay' },
-            createOrder: function(data, actions) {
-              return actions.order.create({
-                purchase_units: [{
-                  amount: { value: plan.price, currency_code: 'USD' },
-                  description: `Top Up Token Quran AI - Paket ${plan.sku}`
-                }]
-              });
-            },
-            onApprove: function(data, actions) {
-              return actions.order.capture().then(function(details) {
-                const referenceId = details.id || data.orderID;
-                creditTokensToUser(userId, plan.sku, referenceId);
-              });
-            }
-          }).render('#' + plan.id);
+          try {
+            paypal.Buttons({
+              style: { layout: 'vertical', color: 'blue', shape: 'rect', label: 'pay' },
+              createOrder: function(data, actions) {
+                return actions.order.create({
+                  purchase_units: [{
+                    amount: { value: plan.price, currency_code: 'USD' },
+                    description: `Top Up Token Quran AI - Paket ${plan.sku}`
+                  }]
+                });
+              },
+              onApprove: function(data, actions) {
+                return actions.order.capture().then(function(details) {
+                  const referenceId = details.id || data.orderID;
+                  creditTokensToUser(userId, plan.sku, referenceId);
+                });
+              },
+              onError: function(err) {
+                console.error('PayPal Button Error:', err);
+              }
+            }).render('#' + plan.id);
+          } catch (e) {
+            console.error('Error saat render PayPal button:', e);
+          }
         }
       });
     }
