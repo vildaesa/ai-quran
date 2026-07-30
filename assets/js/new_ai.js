@@ -75,7 +75,7 @@
         gap: 8px;
         transition: all 0.3s ease;
       `;
-      toastDiv.innerHTML = `<span>✨ Selamat datang kembali, <strong>${escapeHtml(userName)}</strong>!</span>`;
+      toastDiv.innerHTML = `<span style="font-size:small;font-weight:bold;">✨ Selamat datang kembali, <strong>${escapeHtml(userName)}</strong>!</span>`;
       document.body.appendChild(toastDiv);
       setTimeout(() => {
         toastDiv.style.opacity = '0';
