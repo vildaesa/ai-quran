@@ -76,7 +76,7 @@
         display: flex;
         align-items: center;
         gap: 8px;
-        width: 100%;
+        width: fit-content;
         transition: all 0.3s ease;
       `;
       toastDiv.innerHTML = `<span>✨ Selamat datang kembali, <strong>${escapeHtml(userName)}</strong>!</span>`;
