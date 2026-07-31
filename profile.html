@@ -489,7 +489,7 @@
           const formatted = data.newBalance.toLocaleString('id-ID');
           await showAlert(
             'Pembelian Berhasil! 🎉',
-            `Terima kasih! Sisa saldo Anda sekarang adalah **${formatted} token**.`,
+            `Terima kasih! Sisa saldo Anda sekarang adalah ${formatted} token.`,
             `Paket ${sku}`
           );
           await showToast('Saldo token berhasil ditambahkan', 'success');
