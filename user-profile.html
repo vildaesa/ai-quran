@@ -435,6 +435,29 @@ permalink: /profile
     const MAIN_WORKER_URL = window.location.origin; // atau ganti domain worker utama kamu
     const BILLING_WORKER_URL = 'https://ai-token-billing.mvstream.workers.dev';
 
+    // ---------- HELPER IONIC ALERT & TOAST ----------
+    async function showToast(message, color = 'dark', duration = 2500) {
+      const toast = document.createElement('ion-toast');
+      toast.message = message;
+      toast.duration = duration;
+      toast.color = color;
+      toast.position = 'bottom';
+      
+      document.body.appendChild(toast);
+      return await toast.present();
+    }
+
+    async function showAlert(header, message, subHeader = '') {
+      const alert = document.createElement('ion-alert');
+      alert.header = header;
+      if (subHeader) alert.subHeader = subHeader;
+      alert.message = message;
+      alert.buttons = ['OK'];
+
+      document.body.appendChild(alert);
+      return await alert.present();
+    }
+
     // ---------- KONFIGURASI FIREBASE ----------
     const firebaseConfig = {
       apiKey: "{{ site.API_KEY }}",
@@ -498,7 +521,9 @@ permalink: /profile
     });
 
     document.getElementById('logout-page-btn')?.addEventListener('click', () => {
-      auth.signOut();
+      auth.signOut().then(() => {
+        showToast('Berhasil keluar akun.', 'medium');
+      });
     });
 
     async function fetchUserBalance(userId) {
@@ -533,15 +558,29 @@ permalink: /profile
         const data = await res.json();
 
         if (data.ok) {
-          alert(`Berhasil! Sisa saldo Anda sekarang: ${data.newBalance.toLocaleString('id-ID')} token.`);
+          const formattedBalance = data.newBalance.toLocaleString('id-ID');
+          
+          await showAlert(
+            'Pembelian Berhasil! 🎉', 
+            `Terima kasih! Sisa saldo Anda sekarang adalah **${formattedBalance} token**.`,
+            `Paket ${sku}`
+          );
+          
+          showToast('Saldo token berhasil ditambahkan', 'success');
+          
           fetchUserBalance(userId);
           saveTransactionRecord(sku, data.credited, referenceId);
           renderHistoryTable();
         } else {
-          alert('Gagal mengkreditkan token. Silakan hubungi admin.');
+          await showAlert(
+            'Gagal Mengkreditkan Token', 
+            'Terjadi masalah saat memproses token Anda. Silakan hubungi admin atau dukung bantuan.',
+            'Error Pembelian'
+          );
         }
       } catch (err) {
         console.error('Gagal proses kredit:', err);
+        showToast('Terjadi kesalahan koneksi saat memproses pembelian.', 'danger');
       }
     }
 
@@ -576,6 +615,10 @@ permalink: /profile
                   const referenceId = details.id || data.orderID;
                   creditTokensToUser(userId, plan.sku, referenceId);
                 });
+              },
+              onError: function(err) {
+                console.error('PayPal Error:', err);
+                showAlert('Gagal Pembayaran', 'Terjadi kesalahan pada PayPal saat memproses pembayaran Anda.');
               }
             }).render('#' + plan.id);
           } catch (e) {
