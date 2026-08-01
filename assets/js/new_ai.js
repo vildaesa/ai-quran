@@ -9,6 +9,8 @@
       appId: "1:1025965303376:web:d2aa080d9f81b4fa699355"
   };
 
+  const API_BASE_URL = 'https://ai-quran-backend.vildaesa.workers.dev';
+
   let currentUser = null; 
   let auth = null;
 
@@ -29,9 +31,15 @@
 
           if (user) {
             removeLoginFloatingBanner();
-            if (wasLoggedOut) {
-              showWelcomeToast(user.displayName || 'Pengguna');
-            }
+            // JIKA USER LOGIN: Ambil histori chat dari Cloudflare KV
+            loadUserHistoryFromKV(user.uid).then(() => {
+              if (wasLoggedOut) {
+                showWelcomeToast(user.displayName || 'Pengguna');
+              }
+            });
+          } else {
+            // JIKA USER LOGOUT: Bersihkan layar chat & kembali ke Welcome Screen
+            handleUserLogoutReset();
           }
         });
       } catch (e) {
@@ -229,18 +237,18 @@
   // ---------- GLOBAL STATE ----------
   let conversations = [];        // array of { id, title, messages: [{id, text, sender, timestamp}] }
   let currentConversationId = null;
-  let isWaitingResponse = false; // mencegah spam saat AI merespon / typing
+  let isWaitingResponse = false;
   let currentTypingIndicatorElement = null;
-  let aiMessageElement = null;   // Referensi untuk bubble AI yang sedang streaming
+  let aiMessageElement = null;
 
   // Audio state Al-Quran
-  let currentAudioPlayer = null; // Memegang instance Audio yang sedang menyala
-  let activeAudioBtn = null;     // Memegang tombol ikon aktif agar bisa diganti ikonnya ke "pause"
+  let currentAudioPlayer = null;
+  let activeAudioBtn = null;
 
   // STATE: Playlist Murottal Kontinu
   let isContinuousPlaying = false; 
-  let currentSurahVerses = [];    // Menyimpan daftar ayat yang sedang dibuka [{ nomorAyat, audioUrl }]
-  let currentPlayingIndex = -1;   // Index ayat yang sedang berjalan di dalam playlist
+  let currentSurahVerses = [];    
+  let currentPlayingIndex = -1;   
   let loadedSurahNumber = null;
 
   // DOM references
@@ -272,12 +280,10 @@
   let playerCurrentAyahText;
   let playAllIcon;
 
-  // Helper: Generate unique ID
   function generateId() {
     return Date.now() + '-' + Math.random().toString(36).substr(2, 6);
   }
 
-  // Update Teks Waktu Real-Time di Empty Placeholder
   function updatePlaceholderTime() {
     const subtitleEl = document.getElementById('empty-chat-subtitle-text');
     if (!subtitleEl) return;
@@ -300,7 +306,7 @@
     subtitleEl.innerHTML = `${ucapan}.<br>sekarang pukul ${timeString} WIB<br>Ada yang bisa saya bantu tentang Al-Quran?`;
   }
 
-  // ---------- ION ALERT GLOBAL KONFIRM DINAMIS (Promise based) ----------
+  // ---------- ION ALERT GLOBAL KONFIRM DINAMIS ----------
   async function confirmDialog(header, message) {
     return new Promise((resolve) => {
       const alert = document.createElement('ion-alert');
@@ -308,16 +314,8 @@
       alert.message = message;
       alert.cssClass = 'minimalist-alert';
       alert.buttons = [
-        {
-          text: 'Batal',
-          role: 'cancel',
-          handler: () => resolve(false)
-        },
-        {
-          text: 'Ya, Hapus',
-          role: 'confirm',
-          handler: () => resolve(true)
-        }
+        { text: 'Batal', role: 'cancel', handler: () => resolve(false) },
+        { text: 'Ya, Hapus', role: 'confirm', handler: () => resolve(true) }
       ];
       document.body.appendChild(alert);
       alert.present().then(() => {
@@ -329,7 +327,6 @@
     });
   }
 
-  // General alert info
   async function showAlert(header, message) {
     const alert = document.createElement('ion-alert');
     alert.header = header;
@@ -340,26 +337,96 @@
     alert.onDidDismiss().then(() => alert.remove());
   }
 
-  // ---------- LOCAL STORAGE ----------
-  function saveToLocalStorage() {
+  // ---------- CLOUDFLARE KV & LOCALSTORAGE INTEGRATION ----------
+  
+  // Save lokal & Trigger Sync ke Cloudflare KV
+  function saveAndSyncHistory() {
+    // 1. Simpan ke LocalStorage sebagai cache cepat
     const dataToStore = {
       conversations: conversations,
       currentConversationId: currentConversationId
     };
     localStorage.setItem('ai_chat_app_data', JSON.stringify(dataToStore));
+
+    // 2. Jika user login, sinkronkan ke Cloudflare KV Namespace
+    if (currentUser && currentUser.uid) {
+      fetch(`${API_BASE_URL}/api/history`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-id': currentUser.uid
+        },
+        body: JSON.stringify({
+          userId: currentUser.uid,
+          conversations: conversations
+        })
+      }).catch(err => console.error("Gagal sync KV:", err));
+    }
+  }
+
+  // Ambil Histori dari Cloudflare KV saat User Login
+  async function loadUserHistoryFromKV(userId) {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/history`, {
+        method: 'GET',
+        headers: { 'x-user-id': userId }
+      });
+      const data = await res.json();
+
+      if (data && Array.isArray(data.conversations) && data.conversations.length > 0) {
+        conversations = data.conversations;
+        currentConversationId = conversations[0]?.id || generateId();
+      } else {
+        // Buat percakapan baru jika KV masih kosong
+        const newId = generateId();
+        conversations = [{ id: newId, title: 'Percakapan Baru', messages: [] }];
+        currentConversationId = newId;
+      }
+    } catch (err) {
+      console.warn("Gagal memuat histori dari KV, menggunakan fallback cache lokal:", err);
+      loadFromLocalStorage();
+    } finally {
+      saveAndSyncHistory();
+      renderSidebar();
+      renderCurrentChat();
+      if (chatTitleEl) {
+        const cur = conversations.find(c => c.id === currentConversationId);
+        chatTitleEl.innerText = cur ? cur.title : 'AI Chat';
+      }
+    }
+  }
+
+  // RESET LAYAR KE WELCOME SCREEN SAAT USER LOGOUT
+  function handleUserLogoutReset() {
+    // Kosongkan histori memori
+    conversations = [];
+    currentConversationId = null;
+    localStorage.removeItem('ai_chat_app_data');
+
+    // Buat 1 slot percakapan kosong baru untuk tampilan bersih
+    const defaultId = generateId();
+    conversations = [{
+      id: defaultId,
+      title: 'Percakapan Baru',
+      messages: []
+    }];
+    currentConversationId = defaultId;
+
+    // Render ulang UI
+    renderSidebar();
+    renderCurrentChat();
+    if (chatTitleEl) chatTitleEl.innerText = 'AI Chat';
+
+    // Tampilkan Banner Informasi Login
+    showLoginFloatingBanner();
   }
 
   function loadFromLocalStorage() {
     const raw = localStorage.getItem('ai_chat_app_data');
     if (!raw) {
       const defaultId = generateId();
-      conversations = [{
-        id: defaultId,
-        title: 'Percakapan Baru',
-        messages: []
-      }];
+      conversations = [{ id: defaultId, title: 'Percakapan Baru', messages: [] }];
       currentConversationId = defaultId;
-      saveToLocalStorage();
       return;
     }
     try {
@@ -370,12 +437,8 @@
         const newId = generateId();
         conversations = [{ id: newId, title: 'Percakapan Baru', messages: [] }];
         currentConversationId = newId;
-        saveToLocalStorage();
-      } else if (currentConversationId && !conversations.find(c => c.id === currentConversationId)) {
-        currentConversationId = conversations[0].id;
       }
     } catch(e) {
-      console.warn(e);
       const defaultId = generateId();
       conversations = [{ id: defaultId, title: 'Percakapan Baru', messages: [] }];
       currentConversationId = defaultId;
@@ -393,7 +456,7 @@
     } else {
       conv.title = 'Percakapan Baru';
     }
-    saveToLocalStorage();
+    saveAndSyncHistory();
     renderSidebar();
     if (currentConversationId === convId) {
       chatTitleEl.innerText = conv.title;
@@ -478,7 +541,8 @@
     } else if (currentConversationId === convId) {
       currentConversationId = conversations[0].id;
     }
-    saveToLocalStorage();
+    
+    saveAndSyncHistory();
     renderSidebar();
     renderCurrentChat();
 
@@ -602,19 +666,17 @@
 
     if (sender === 'user' && conv.messages.filter(m => m.sender === 'user').length === 1) {
       updateConversationTitle(currentConversationId);
+    } else {
+      saveAndSyncHistory();
     }
-    saveToLocalStorage();
+    
     renderCurrentChat();
     return true;
   }
 
-  // API Configuration
-  const API_BASE_URL = 'https://ai-quran-backend.vildaesa.workers.dev';
-
   async function getAIResponse(userMessage) {
     if (isWaitingResponse) return;
 
-    // VALIDASI FRONTEND: TAMPILKAN FLOATING BANNER JIKA BELUM LOGIN (TANPA MERUSAK HISTORY)
     if (!currentUser) {
       showLoginFloatingBanner();
       return;
@@ -642,7 +704,9 @@
         },
         body: JSON.stringify({ 
           userId: activeUserId,
-          messages: messageHistory 
+          messages: messageHistory,
+          conversationId: currentConversationId,
+          fullConversations: conversations // Kirim struktur penuh untuk autosave KV
         })
       });
 
@@ -776,7 +840,7 @@
         }
       }
 
-      saveToLocalStorage();
+      saveAndSyncHistory();
       aiMessageElement = null;
     } catch (error) {
       console.error('Error:', error);
@@ -822,7 +886,7 @@
     };
     conversations.unshift(newConv);
     currentConversationId = newId;
-    saveToLocalStorage();
+    saveAndSyncHistory();
     renderSidebar();
     renderCurrentChat();
     chatTitleEl.innerText = 'Percakapan Baru';
@@ -837,7 +901,7 @@
     const conv = conversations.find(c => c.id === convId);
     if (!conv) return;
     currentConversationId = convId;
-    saveToLocalStorage();
+    saveAndSyncHistory();
     renderSidebar();
     renderCurrentChat();
     const activeConv = conversations.find(c => c.id === convId);
@@ -860,7 +924,7 @@
     const confirmed = await confirmDialog('Bersihkan Obrolan', `Hapus seluruh pesan yang ada pada "${conv.title}"?`);
     if (confirmed) {
       conv.messages = [];
-      saveToLocalStorage();
+      saveAndSyncHistory();
       renderCurrentChat();
       updateConversationTitle(currentConversationId);
       chatTitleEl.innerText = conv.title;
@@ -1013,7 +1077,6 @@
 
     currentSurahVerses = [];
 
-    // --- API UTAMA: equran.id ---
     try {
       const response = await fetch(`https://equran.id/api/v2/surat/${surahNumber}`);
       const result = await response.json();
@@ -1044,7 +1107,6 @@
       console.warn("API Utama gagal atau lambat, beralih ke Fallback API Global...", e);
     }
 
-    // --- API FALLBACK: alquran.cloud ---
     try {
       const response = await fetch(`https://api.alquran.cloud/v1/surah/${surahNumber}/editions/quran-uthmani,id.kemenag`);
       const result = await response.json();
@@ -1157,9 +1219,8 @@
     });
   }
 
-
   // ========================================================
-  // ENGINE LOGIC: PLAYLIST OTOMATIS BERURUTAN (FOOTER SYSTEM)
+  // ENGINE LOGIC: PLAYLIST OTOMATIS BERURUTAN
   // ========================================================
 
   function enableContinuousPlayerControls() {
@@ -1315,9 +1376,7 @@
     }
 
     isContinuousPlaying = true;
-
     quranStopBtn.style.display = 'block';
-
     playContinuousAyatByIndex(nextIndex);
   }
 
@@ -1333,9 +1392,7 @@
     }
 
     isContinuousPlaying = true;
-
     quranStopBtn.style.display = 'block';
-
     playContinuousAyatByIndex(prevIndex);
   }
 
@@ -1357,7 +1414,6 @@
     playContinuousAyatByIndex(index);
   }
 
-  // Fungsi Refresh Ikon Paksa
   function forceIconRefresh(iconElement) {
     if (!iconElement) return;
 
@@ -1371,7 +1427,6 @@
     }, 10);
   }
 
-  // Fungsi Pembantu: Pewaktu Tunggu Ayat Render di DOM & Memicu Autoscroll
   function waitForAyahAndScroll(surahNumber, ayahNumber) {
     let attempts = 0;
     const maxAttempts = 30; 
