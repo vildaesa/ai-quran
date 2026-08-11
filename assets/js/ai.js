@@ -2,7 +2,6 @@
 ---
 
 (function(){
-  // ---------- KONFIGURASI FIREBASE AUTH ----------
   const firebaseConfig = {
       apiKey: "{{ site.API_KEY }}",
       authDomain: "{{ site.AUTH_DOMAIN }}",
