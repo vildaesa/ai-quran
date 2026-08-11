@@ -1,4 +1,5 @@
 (function(){
+  // ---------- KONFIGURASI FIREBASE AUTH ----------
   const firebaseConfig = {
       apiKey: "AIzaSyATyvdXXQHvJE6-EYiwXJ0jCZkvUBW-3c8",
       authDomain: "my-ai-quran.firebaseapp.com",
@@ -370,19 +371,16 @@
         method: 'GET',
         headers: { 'x-user-id': userId }
       });
-      
-      if (!res.ok) {
-        throw new Error(`Respon server KV gagal dengan status: ${res.status}`);
-      }
-
       const data = await res.json();
 
       if (data && Array.isArray(data.conversations) && data.conversations.length > 0) {
         conversations = data.conversations;
         currentConversationId = conversations[0]?.id || generateId();
       } else {
-        // Jika data dari KV kosong, coba ambil dari local storage dulu
-        loadFromLocalStorage();
+        // Buat percakapan baru jika KV masih kosong
+        const newId = generateId();
+        conversations = [{ id: newId, title: 'Percakapan Baru', messages: [] }];
+        currentConversationId = newId;
       }
     } catch (err) {
       console.warn("Gagal memuat histori dari KV, menggunakan fallback cache lokal:", err);
@@ -587,9 +585,9 @@
 
     if (messages.length === 0) {
       updatePlaceholderTime();
-      if (emptyPlaceholder) emptyPlaceholder.style.display = 'flex';
+      emptyPlaceholder.style.display = 'flex';
     } else {
-      if (emptyPlaceholder) emptyPlaceholder.style.display = 'none';
+      emptyPlaceholder.style.display = 'none';
       messages.forEach(msg => {
         const wrapperDiv = document.createElement('div');
         wrapperDiv.className = `message-wrapper ${msg.sender}`;
@@ -760,9 +758,8 @@
       let aiFullText = '';
       let buffer = '';
       let currentEvent = 'message'; 
-      let isDone = false;
 
-      while (!isDone) {
+      while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
@@ -781,10 +778,7 @@
 
           if (trimmedLine.startsWith('data:')) {
             const dataStr = trimmedLine.substring(5).trim();
-            if (dataStr === '[DONE]') {
-              isDone = true;
-              break;
-            }
+            if (dataStr === '[DONE]') break;
 
             if (currentEvent === 'action') {
               try {
@@ -803,7 +797,7 @@
 
                     openSurahReadingView(surahNum, surahName);
                     waitForAyahAndScroll(surahNum, ayahNum);
-                  }, 1000); 
+                  }, 2200); 
                 }
               } catch (err) {
                 console.error("Gagal membaca payload event action:", err);
@@ -824,8 +818,6 @@
                 updateAIBubbleOnly(aiFullText);
               }
             }
-            // Reset ke event default setelah memproses data line
-            currentEvent = 'message';
           }
         }
       }
@@ -857,7 +849,9 @@
       aiMessageElement = null;
     } finally {
       isWaitingResponse = false;
-      removeTypingIndicator();
+      setTimeout(() => {
+        removeTypingIndicator();
+      }, 2500);
     }
   }
 
@@ -965,12 +959,10 @@
     if (!chatContent) return;
     chatContent.addEventListener('ionScroll', async (ev) => {
       const scrollTop = ev.detail.scrollTop;
-      if (scrollTopFab) {
-        if (scrollTop > 300) {
-          scrollTopFab.style.display = 'flex';
-        } else {
-          scrollTopFab.style.display = 'none';
-        }
+      if (scrollTop > 300) {
+        scrollTopFab.style.display = 'flex';
+      } else {
+        scrollTopFab.style.display = 'none';
       }
     });
   }
@@ -1051,15 +1043,13 @@
   function openSurahReadingView(surahNumber, surahName) {
     resetContinuousPlayerState();
 
-    if (quranBookView) quranBookView.style.display = 'none';
-    if (quranReadingView) quranReadingView.style.display = 'block';
-    if (quranBackBtn) quranBackBtn.style.display = 'block';
-    if (closeQuranBtn) closeQuranBtn.style.display = 'none';
-    if (quranModalFooter) quranModalFooter.style.display = 'block';
+    quranBookView.style.display = 'none';
+    quranReadingView.style.display = 'block';
+    quranBackBtn.style.display = 'block';
+    closeQuranBtn.style.display = 'none';
+    quranModalFooter.style.display = 'block';
 
-    if (quranModalTitle) {
-      quranModalTitle.innerText = surahName.startsWith("Surah") ? surahName : `Surah ${surahName}`;
-    }
+    quranModalTitle.innerText = surahName.startsWith("Surah") ? surahName : `Surah ${surahName}`;
     loadedSurahNumber = parseInt(surahNumber, 10);
 
     fetchAndRenderSurah(loadedSurahNumber);
@@ -1068,19 +1058,17 @@
   function closeSurahReadingView() {
     resetContinuousPlayerState();
 
-    if (quranBookView) quranBookView.style.display = 'block';
-    if (quranReadingView) quranReadingView.style.display = 'none';
-    if (quranBackBtn) quranBackBtn.style.display = 'none';
-    if (closeQuranBtn) closeQuranBtn.style.display = 'block';
-    if (quranModalFooter) quranModalFooter.style.display = 'none';
+    quranBookView.style.display = 'block';
+    quranReadingView.style.display = 'none';
+    quranBackBtn.style.display = 'none';
+    closeQuranBtn.style.display = 'block';
+    quranModalFooter.style.display = 'none';
 
-    if (quranModalTitle) quranModalTitle.innerText = 'Al-Quran Digital';
+    quranModalTitle.innerText = 'Al-Quran Digital';
     loadedSurahNumber = null;
   }
 
   async function fetchAndRenderSurah(surahNumber) {
-    if (!quranVersesContainer) return;
-
     quranVersesContainer.innerHTML = `
       <div class="menu-loading-container" style="padding: 100px 0; text-align: center;">
         <ion-spinner name="crescent" class="custom-spinner"></ion-spinner>
@@ -1236,21 +1224,16 @@
   // ========================================================
 
   function enableContinuousPlayerControls() {
-    if (quranPlayAllBtn) quranPlayAllBtn.style.display = 'block';
+    quranPlayAllBtn.style.display = 'block';
 
-    if (playAllIcon) {
-      playAllIcon.name = 'play-outline';
-      playAllIcon.setAttribute('name', 'play-outline');
-    }
+    playAllIcon.name = 'play-outline';
+    playAllIcon.setAttribute('name', 'play-outline');
 
-    if (playerCurrentAyahText) {
-      playerCurrentAyahText.innerText = 'Ketuk tombol play untuk mendengarkan semua surah';
-    }
+    playerCurrentAyahText.innerText = 'Ketuk tombol play untuk mendengarkan semua surah';
   }
 
   function resetContinuousPlayerState() {
     if (currentAudioPlayer) {
-      currentAudioPlayer.onended = null;
       currentAudioPlayer.pause();
       currentAudioPlayer = null;
     }
@@ -1258,20 +1241,14 @@
     currentPlayingIndex = -1;
     activeAudioBtn = null;
 
-    if (quranPlayAllBtn) {
-      quranPlayAllBtn.style.display = 'block';
-      quranPlayAllBtn.className = 'mini-control-btn play-main-btn';
-    }
-    if (quranStopBtn) quranStopBtn.style.display = 'none';
+    quranPlayAllBtn.style.display = 'block';
+    quranPlayAllBtn.className = 'mini-control-btn play-main-btn';
+    quranStopBtn.style.display = 'none';
 
-    if (playAllIcon) {
-      playAllIcon.name = 'play-outline';
-      playAllIcon.setAttribute('name', 'play-outline');
-    }
+    playAllIcon.name = 'play-outline';
+    playAllIcon.setAttribute('name', 'play-outline');
 
-    if (playerCurrentAyahText) {
-      playerCurrentAyahText.innerText = 'Putar semua surah';
-    }
+    playerCurrentAyahText.innerText = 'Putar semua surah';
 
     document.querySelectorAll('.ayah-card').forEach(card => {
       card.classList.remove('active-playing-ayah');
@@ -1285,15 +1262,11 @@
       if (currentAudioPlayer && !currentAudioPlayer.paused) {
         currentAudioPlayer.pause();
 
-        if (playAllIcon) {
-          playAllIcon.name = 'play-outline';
-          playAllIcon.setAttribute('name', 'play-outline');
-          forceIconRefresh(playAllIcon);
-        }
+        playAllIcon.name = 'play-outline';
+        playAllIcon.setAttribute('name', 'play-outline');
+        forceIconRefresh(playAllIcon); 
 
-        if (playerCurrentAyahText) {
-          playerCurrentAyahText.innerText = `Murottal Ayat ${currentPlayingIndex + 1} sedang dijeda`;
-        }
+        playerCurrentAyahText.innerText = `Murottal Ayat ${currentPlayingIndex + 1} sedang dijeda`;
 
         const activeCardBtn = document.querySelector(`#ayah-${currentPlayingIndex + 1} .audio-play-btn`);
         if (activeCardBtn) {
@@ -1302,15 +1275,11 @@
       } else if (currentAudioPlayer && currentAudioPlayer.paused) {
         currentAudioPlayer.play().catch(e => console.error("Gagal melanjutkan audio:", e));
 
-        if (playAllIcon) {
-          playAllIcon.name = 'pause-outline';
-          playAllIcon.setAttribute('name', 'pause-outline');
-          forceIconRefresh(playAllIcon);
-        }
+        playAllIcon.name = 'pause-outline';
+        playAllIcon.setAttribute('name', 'pause-outline');
+        forceIconRefresh(playAllIcon); 
 
-        if (playerCurrentAyahText) {
-          playerCurrentAyahText.innerText = `Melantunkan Ayat ${currentPlayingIndex + 1}...`;
-        }
+        playerCurrentAyahText.innerText = `Melantunkan Ayat ${currentPlayingIndex + 1}...`;
 
         const activeCardBtn = document.querySelector(`#ayah-${currentPlayingIndex + 1} .audio-play-btn`);
         if (activeCardBtn) {
@@ -1321,13 +1290,11 @@
       isContinuousPlaying = true;
       currentPlayingIndex = 0;
 
-      if (quranStopBtn) quranStopBtn.style.display = 'block';
+      quranStopBtn.style.display = 'block';
 
-      if (playAllIcon) {
-        playAllIcon.name = 'pause-outline';
-        playAllIcon.setAttribute('name', 'pause-outline');
-        forceIconRefresh(playAllIcon);
-      }
+      playAllIcon.name = 'pause-outline';
+      playAllIcon.setAttribute('name', 'pause-outline');
+      forceIconRefresh(playAllIcon); 
 
       playContinuousAyatByIndex(currentPlayingIndex);
     }
@@ -1360,12 +1327,9 @@
       activeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
-    if (playerCurrentAyahText) {
-      playerCurrentAyahText.innerText = `Melantunkan Ayat ${ayahNum}...`;
-    }
+    playerCurrentAyahText.innerText = `Melantunkan Ayat ${ayahNum}...`;
 
     if (currentAudioPlayer) {
-      currentAudioPlayer.onended = null;
       currentAudioPlayer.pause();
     }
 
@@ -1412,7 +1376,7 @@
     }
 
     isContinuousPlaying = true;
-    if (quranStopBtn) quranStopBtn.style.display = 'block';
+    quranStopBtn.style.display = 'block';
     playContinuousAyatByIndex(nextIndex);
   }
 
@@ -1428,7 +1392,7 @@
     }
 
     isContinuousPlaying = true;
-    if (quranStopBtn) quranStopBtn.style.display = 'block';
+    quranStopBtn.style.display = 'block';
     playContinuousAyatByIndex(prevIndex);
   }
 
@@ -1442,12 +1406,10 @@
 
     isContinuousPlaying = true;
     currentPlayingIndex = index;
-    if (quranStopBtn) quranStopBtn.style.display = 'block';
+    quranStopBtn.style.display = 'block';
 
-    if (playAllIcon) {
-      playAllIcon.name = 'pause-outline';
-      playAllIcon.setAttribute('name', 'pause-outline');
-    }
+    playAllIcon.name = 'pause-outline';
+    playAllIcon.setAttribute('name', 'pause-outline');
 
     playContinuousAyatByIndex(index);
   }
@@ -1533,7 +1495,7 @@
     setInterval(updatePlaceholderTime, 30000);
 
     const curConv = conversations.find(c => c.id === currentConversationId);
-    if (curConv && chatTitleEl) chatTitleEl.innerText = curConv.title;
+    if (curConv) chatTitleEl.innerText = curConv.title;
 
     sendBtn?.addEventListener('click', () => sendUserMessage());
     messageInput?.addEventListener('keypress', (e) => {
@@ -1584,51 +1546,45 @@
     }, 300);
   }
 
-  if (document.readyState === 'loading') {
-    window.addEventListener('DOMContentLoaded', init);
-  } else {
+  window.addEventListener('DOMContentLoaded', () => {
     init();
-  }
+  });
 })();
 
 // Lisensi Proteksi Template
 document.addEventListener('DOMContentLoaded', function () {
-    try {
-      const dev = 'aHR0cHM6Ly92aWxkYWVzYS5naXRodWIuaW8=';
-      const myLicense = atob(dev);
-      const metaLicenseEl = document.querySelector('meta[name="license"]');
-      const metaLicense = metaLicenseEl ? metaLicenseEl.getAttribute('content') : null;
+    const dev = 'aHR0cHM6Ly92aWxkYWVzYS5naXRodWIuaW8=';
+    const myLicense = atob(dev);
+    const metaLicenseEl = document.querySelector('meta[name="license"]');
+    const metaLicense = metaLicenseEl ? metaLicenseEl.getAttribute('content') : null;
 
-      let second = 10;
-      if (metaLicense && metaLicense === myLicense) return;
+    let second = 10;
+    if (metaLicense && metaLicense === myLicense) return;
 
-      const lockStyleAndHtml = `
-          <style>
-              body { background: #000000b3 !important; overflow: hidden !important; }
-              #peringatan { z-index: 99999999999999; position: fixed; top: 0; right: 0; left: 0; height: 100%; padding: 16% 0; text-align: center; background: #000000f2; color: #fff; font-family: sans-serif; }
-              #peringatan h4 { margin-bottom: 35px; font-size: 32px; }
-              #peringatan p { margin-top: 20px; font-size: 18px; letter-spacing: 2px; line-height: 30px; }
-              #aktivasi { font-size: 50px; display: block; margin-top: 20px; color: #ff4444; }
-              @media only screen and (max-width:680px) { #peringatan { padding: 60% 0; } #peringatan h4 { font-size: 20px !important; } }
-          </style>
-          <div id="peringatan">
-              <h4>🔒︄ Template is Locked Up</h4>
-              <p>Meta license template tidak valid.<br>Mohon jangan menghapus / merubah license.</p>
-              <span id="aktivasi">${second}</span>
-          </div>
-      `;
+    const lockStyleAndHtml = `
+        <style>
+            body { background: #000000b3 !important; overflow: hidden !important; }
+            #peringatan { z-index: 99999999999999; position: fixed; top: 0; right: 0; left: 0; height: 100%; padding: 16% 0; text-align: center; background: #000000f2; color: #fff; font-family: sans-serif; }
+            #peringatan h4 { margin-bottom: 35px; font-size: 32px; }
+            #peringatan p { margin-top: 20px; font-size: 18px; letter-spacing: 2px; line-height: 30px; }
+            #aktivasi { font-size: 50px; display: block; margin-top: 20px; color: #ff4444; }
+            @media only screen and (max-width:680px) { #peringatan { padding: 60% 0; } #peringatan h4 { font-size: 20px !important; } }
+        </style>
+        <div id="peringatan">
+            <h4>🔒︄ Template is Locked Up</h4>
+            <p>Meta license template tidak valid.<br>Mohon jangan menghapus / merubah license.</p>
+            <span id="aktivasi">${second}</span>
+        </div>
+    `;
 
-      document.body.insertAdjacentHTML('beforeend', lockStyleAndHtml);
-      const aktivasiEl = document.getElementById('aktivasi');
-      const lockInterval = setInterval(function () {
-          second--;
-          if (aktivasiEl) aktivasiEl.textContent = second;
-          if (second <= 0) {
-              clearInterval(lockInterval);
-              window.location.href = "https://vildaesa.github.io/blog/";
-          }
-      }, 1000);
-    } catch (err) {
-      console.warn("Pemeriksaan Lisensi dilewati karena konfigurasi template belum siap.", err);
-    }
+    document.body.insertAdjacentHTML('beforeend', lockStyleAndHtml);
+    const aktivasiEl = document.getElementById('aktivasi');
+    const lockInterval = setInterval(function () {
+        second--;
+        if (aktivasiEl) aktivasiEl.textContent = second;
+        if (second <= 0) {
+            clearInterval(lockInterval);
+            window.location.href = "https://vildaesa.github.io/blog/";
+        }
+    }, 1000);
 });
